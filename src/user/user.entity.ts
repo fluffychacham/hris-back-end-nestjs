@@ -2,6 +2,7 @@ import {Entity, PrimaryGeneratedColumn, Column, BeforeInsert, JoinTable, ManyToM
 import { IsEmail, Validate } from 'class-validator';
 import * as crypto from 'crypto';
 import { ArticleEntity } from '../article/article.entity';
+import { CompanyEntity } from "../company/company.entity";
 
 @Entity('user')
 export class UserEntity {
@@ -15,6 +16,9 @@ export class UserEntity {
   @Column()
   @IsEmail()
   email: string;
+
+  @Column({default: 'owner'})
+  role: string;
 
   @Column({default: ''})
   bio: string;
@@ -36,4 +40,8 @@ export class UserEntity {
 
   @OneToMany(type => ArticleEntity, article => article.author)
   articles: ArticleEntity[];
+
+  @OneToMany(type => CompanyEntity, company => company.owner)
+  @JoinTable()
+  company: CompanyEntity[];
 }
