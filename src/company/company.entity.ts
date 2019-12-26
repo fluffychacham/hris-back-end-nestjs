@@ -25,7 +25,7 @@ export class CompanyEntity {
         this.updated = new Date;
     }
 
-    @ManyToOne(type => UserEntity, user => user.company)
+    @ManyToOne(type => UserEntity, user => user.companies)
     owner: UserEntity;
 
 }

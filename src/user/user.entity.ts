@@ -43,5 +43,5 @@ export class UserEntity {
 
   @OneToMany(type => CompanyEntity, company => company.owner)
   @JoinTable()
-  company: CompanyEntity[];
+  companies: CompanyEntity[];
 }
