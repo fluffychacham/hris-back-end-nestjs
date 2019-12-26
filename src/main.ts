@@ -8,8 +8,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const options = new DocumentBuilder()
-    .setTitle('NestJS Realworld Example App')
-    .setDescription('The Realworld API description')
+    .setTitle('HRIS Application API')
+    .setDescription('Server for HRIS Application')
     .setVersion('1.0')
     .setBasePath('api')
     .addBearerAuth()
