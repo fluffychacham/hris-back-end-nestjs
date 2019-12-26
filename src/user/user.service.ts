@@ -54,6 +54,7 @@ export class UserService {
     newUser.email = email;
     newUser.password = password;
     newUser.articles = [];
+    newUser.companies = [];
 
     const errors = await validate(newUser);
     if (errors.length > 0) {
