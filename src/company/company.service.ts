@@ -2,17 +2,22 @@ import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, getRepository, DeleteResult } from "typeorm";
 
+import { validate } from "class-validator";
+
 import { CompanyEntity } from "./company.entity";
 import { CompanyData, CompanyRO } from "./company.interface";
+
 import { CreateCompanyDto } from "./dto/create-company.dto";
-import { validate } from "class-validator";
 import { UpdateCompanyRO } from "./dto/update-company.dto";
+import { UserEntity } from "../user/user.entity";
 
 @Injectable()
 export class CompanyService {
     constructor(
         @InjectRepository(CompanyEntity) 
-        private readonly companyRepository: Repository<CompanyEntity>
+        private readonly companyRepository: Repository<CompanyEntity>,
+        @InjectRepository(UserEntity)
+        private readonly userRepository: Repository<UserEntity>
     ) {}
 
     async findAll(): Promise<CompanyEntity[]>{
@@ -27,7 +32,7 @@ export class CompanyService {
         return await this.companyRepository.findOne(findOneOptions);
     }
 
-    async finById(id: number): Promise<CompanyRO> {
+    async findById(id: number): Promise<CompanyRO> {
         const company = await this.companyRepository.findOne(id);
         if(!company) {
             const errors = {company: 'Company not found'};
@@ -42,7 +47,7 @@ export class CompanyService {
         return this.buildCompanyRO(company);
     }
 
-    async create(dto: CreateCompanyDto) : Promise<CompanyRO>{
+    async create(id :number, dto: CreateCompanyDto) : Promise<CompanyRO>{
         const { name, description } = dto;
 
         // Check if company name exists
@@ -61,12 +66,20 @@ export class CompanyService {
         newCompany.name = name;
         newCompany.description = description;
 
+        const owner = await this.userRepository.findOne({ where: {id}, relations: ['companies'] });
+
         const errors = await validate(newCompany);
         if(errors.length > 0){
             const _errors = {company: "Company is not valid"};
             throw new HttpException({message: "Inpupt validation failed", _errors}, HttpStatus.BAD_REQUEST);
         } else {
             const savedCompany = await this.companyRepository.save(newCompany);
+            if(Array.isArray(owner.companies)) {
+                owner.companies.push(newCompany);
+            } else {
+                owner.companies = [newCompany];
+            }
+            await this.userRepository.save(owner);
             return this.buildCompanyRO(savedCompany);
         }
     }
@@ -86,8 +99,11 @@ export class CompanyService {
 
     private buildCompanyRO(company: CompanyEntity){
         const companyRO = {
+            id: company.id,
             name: company.name,
-            description: company.description
+            description: company.description,
+            created: company.created,
+            updated: company.updated
         }
 
         return {company: companyRO};
