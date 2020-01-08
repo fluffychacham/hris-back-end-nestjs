@@ -1,0 +1,5 @@
+language: node_js
+rvm:
+    - 10.15
+install:
+    - npm ci
