@@ -3,13 +3,9 @@ import {Get, Controller } from '@nestjs/common';
 import { TagEntity } from './tag.entity';
 import { TagService } from './tag.service';
 
-import {
-  ApiUseTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiBearerAuth()
-@ApiUseTags('tags')
 @Controller('tags')
 export class TagController {
 

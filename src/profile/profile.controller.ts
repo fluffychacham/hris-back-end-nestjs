@@ -3,13 +3,9 @@ import { ProfileService } from './profile.service';
 import { ProfileRO } from './profile.interface';
 import { User } from '../user/user.decorator';
 
-import {
-  ApiUseTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiBearerAuth()
-@ApiUseTags('profiles')
 @Controller('profiles')
 export class ProfileController {
 

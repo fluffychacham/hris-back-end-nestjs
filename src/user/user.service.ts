@@ -97,7 +97,7 @@ export class UserService {
     return this.buildUserRO(user);
   }
 
-  public generateJWT(user) {
+  public generateJWT(user: UserEntity) {
     let today = new Date();
     let exp = new Date(today);
     exp.setDate(today.getDate() + 60);

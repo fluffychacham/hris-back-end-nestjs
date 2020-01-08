@@ -6,13 +6,9 @@ import { HttpException } from '@nestjs/common/exceptions/http.exception';
 import { User } from './user.decorator';
 import { ValidationPipe } from '../shared/pipes/validation.pipe';
 
-import {
-  ApiUseTags,
-  ApiBearerAuth
-} from '@nestjs/swagger';
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiBearerAuth()
-@ApiUseTags('user')
 @Controller()
 export class UserController {
 

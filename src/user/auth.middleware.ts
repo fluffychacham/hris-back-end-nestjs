@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { SECRET } from '../config';
 import { UserService } from './user.service';
+import { Unauthorized } from '../shared/errors/401';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
@@ -16,16 +17,14 @@ export class AuthMiddleware implements NestMiddleware {
       const decoded: any = jwt.verify(token, SECRET);
       const user = await this.userService.findById(decoded.id);
 
-      if (!user) {
-        throw new HttpException('User not found.', HttpStatus.UNAUTHORIZED);
-      }
+      Unauthorized.UserNotFound(!!user);
 
       req.user = user.user;
       req.user.id = decoded.id;
       next();
 
     } else {
-      throw new HttpException('Not authorized.', HttpStatus.UNAUTHORIZED);
+      Unauthorized.NotAuthorized(!true);
     }
   }
 }

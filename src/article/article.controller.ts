@@ -5,21 +5,14 @@ import { ArticlesRO, ArticleRO } from './article.interface';
 import { CommentsRO } from './article.interface';
 import { User } from '../user/user.decorator';
 
-import {
-  ApiUseTags,
-  ApiBearerAuth,
-  ApiResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse } from "@nestjs/swagger";
 
 @ApiBearerAuth()
-@ApiUseTags('articles')
 @Controller('articles')
 export class ArticleController {
 
   constructor(private readonly articleService: ArticleService) {}
 
-  @ApiOperation({ title: 'Get all articles' })
   @ApiResponse({ status: 200, description: 'Return all articles.'})
   @Get()
   async findAll(@Query() query): Promise<ArticlesRO> {
@@ -36,7 +29,6 @@ export class ArticleController {
     return await this.articleService.findComments(slug);
   }
 
-  @ApiOperation({ title: 'Create article' })
   @ApiResponse({ status: 201, description: 'The article has been successfully created.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Post()
@@ -44,7 +36,6 @@ export class ArticleController {
     return this.articleService.create(userId, articleData);
   }
 
-  @ApiOperation({ title: 'Update article' })
   @ApiResponse({ status: 201, description: 'The article has been successfully updated.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Put(':slug')
@@ -53,7 +44,6 @@ export class ArticleController {
     return this.articleService.update(params.slug, articleData);
   }
 
-  @ApiOperation({ title: 'Delete article' })
   @ApiResponse({ status: 201, description: 'The article has been successfully deleted.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Delete(':slug')
@@ -61,7 +51,6 @@ export class ArticleController {
     return this.articleService.delete(params.slug);
   }
 
-  @ApiOperation({ title: 'Create comment' })
   @ApiResponse({ status: 201, description: 'The comment has been successfully created.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Post(':slug/comments')
@@ -69,7 +58,6 @@ export class ArticleController {
     return await this.articleService.addComment(slug, commentData);
   }
 
-  @ApiOperation({ title: 'Delete comment' })
   @ApiResponse({ status: 201, description: 'The article has been successfully deleted.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Delete(':slug/comments/:id')
@@ -78,7 +66,6 @@ export class ArticleController {
     return await this.articleService.deleteComment(slug, id);
   }
 
-  @ApiOperation({ title: 'Favorite article' })
   @ApiResponse({ status: 201, description: 'The article has been successfully favorited.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Post(':slug/favorite')
@@ -86,7 +73,6 @@ export class ArticleController {
     return await this.articleService.favorite(userId, slug);
   }
 
-  @ApiOperation({ title: 'Unfavorite article' })
   @ApiResponse({ status: 201, description: 'The article has been successfully unfavorited.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Delete(':slug/favorite')
@@ -94,7 +80,6 @@ export class ArticleController {
     return await this.articleService.unFavorite(userId, slug);
   }
 
-  @ApiOperation({ title: 'Get article feed' })
   @ApiResponse({ status: 200, description: 'Return article feed.'})
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Get('feed')
