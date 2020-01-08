@@ -16,24 +16,27 @@ import { User } from "../user/user.decorator";
 export class CompanyController {
     constructor(private readonly companyService: CompanyService) {}
 
-    @ApiResponse({ status: 200, description: "List of companies found" })
+    @ApiResponse({ status: 200, type: [CompanyRO], description: "List of companies found" })
     @ApiResponse({ status: 401, description: "Not authorized" })
+    @ApiResponse({ status: 500, description: "Internal Server Error" })
     @Get("companies")
-    async findAll(@User("id") userId: number): Promise<CompanyEntity[]> {
+    async findAll(@User("id") userId: number): Promise<CompanyRO[]> {
         return await this.companyService.findAll(userId);
     }
 
-    @ApiResponse({ status: 200, description: "Company found" })
+    @ApiResponse({ status: 200, type: CompanyRO, description: "Company found" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
+    @ApiResponse({ status: 500, description: "Internal Server Error" })
     @Get("company/:id")
     async findById(@User("id") userId: number, @Param("id") id: number): Promise<CompanyRO> {
         return await this.companyService.findById(userId, id);
     }
 
-    @ApiResponse({ status: 200, description: "Company update successful" })
+    @ApiResponse({ status: 200, type: CompanyRO, description: "Company update successful" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
+    @ApiResponse({ status: 500, description: "Internal Server Error" })
     @Put("company/:id")
     async update(
         @User("id") userId: number,
@@ -45,15 +48,17 @@ export class CompanyController {
 
     @ApiResponse({ status: 201, type: CompanyRO, description: "Create company successful" })
     @ApiResponse({ status: 401, description: "Not authorized" })
+    @ApiResponse({ status: 500, description: "Internal Server Error" })
     @UsePipes(new ValidationPipe())
     @Post("company")
     async create(@Body() dto: CreateCompanyDto, @User("id") userId: number): Promise<CompanyRO> {
         return await this.companyService.create(userId, dto);
     }
 
-    @ApiResponse({ status: 200, description: "Delete company successful" })
+    @ApiResponse({ status: 200, type: DeleteResult, description: "Company deleted" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
+    @ApiResponse({ status: 500, description: "Internal Server Error" })
     @Delete("company/:id")
     async delete(@User("id") userId: number, @Param("id") id: number): Promise<DeleteResult> {
         return await this.companyService.delete(userId, id);

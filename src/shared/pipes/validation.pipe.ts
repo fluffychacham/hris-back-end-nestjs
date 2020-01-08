@@ -1,7 +1,7 @@
-import {PipeTransform, ArgumentMetadata, BadRequestException, HttpStatus, Injectable} from '@nestjs/common';
+import {PipeTransform, ArgumentMetadata, BadRequestException, Injectable} from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
-import {HttpException} from "@nestjs/common/exceptions/http.exception";
+import Errors from '../Errors';
 
 @Injectable()
 export class ValidationPipe implements PipeTransform<any> {
@@ -17,9 +17,7 @@ export class ValidationPipe implements PipeTransform<any> {
     }
     const object = plainToClass(metatype, value);
     const errors = await validate(object);
-    if (errors.length > 0) {
-      throw new HttpException({message: 'Input data validation failed', errors:  this.buildError(errors)}, HttpStatus.BAD_REQUEST);
-    }
+    Errors.inputNotValid(errors.length > 0, { errors: this.buildError(errors) });
     return value;
   }
 

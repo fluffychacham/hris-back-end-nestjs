@@ -1,18 +1,19 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 
 class Errors {
-    public static inputNotValid(data: boolean | undefined, errorMessage: {} | undefined) {
+    public static inputNotValid(data: boolean | undefined, message: {} | undefined) {
         if (data || undefined)
-            throw new HttpException({ message: "Input validation failed", errorMessage }, HttpStatus.BAD_REQUEST);
+            throw new HttpException({ error: { name: "Input validation failed", message } }, HttpStatus.BAD_REQUEST);
     }
 
-    public static notFound(data: boolean | undefined, errorMessage: {} | undefined) {
-        if (!data || undefined) throw new HttpException({ message: "Not found", errorMessage }, HttpStatus.NOT_FOUND);
+    public static notFound(data: boolean | undefined, message: {} | undefined) {
+        if (!data || undefined)
+            throw new HttpException({ error: { name: "Not found", message } }, HttpStatus.NOT_FOUND);
     }
 
-    public static notAuthorized(data: boolean | undefined, errorMessage: {} | undefined) {
+    public static notAuthorized(data: boolean | undefined, message: {} | undefined) {
         if (!data || undefined) {
-            throw new HttpException({ message: "Unauthorized", errorMessage }, HttpStatus.UNAUTHORIZED);
+            throw new HttpException({ error: { name: "Unauthorized", message } }, HttpStatus.UNAUTHORIZED);
         }
     }
 }

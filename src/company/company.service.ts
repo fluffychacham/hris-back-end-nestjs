@@ -22,8 +22,13 @@ export class CompanyService {
         private readonly userRepository: Repository<UserEntity>
     ) {}
 
-    async findAll(userId: number): Promise<CompanyEntity[]> {
-        return (await this.userRepository.findOne({ where: { id: userId }, relations: ["companies"] })).companies;
+    async findAll(userId: number): Promise<CompanyRO[]> {
+        const companies: CompanyEntity[] = await (
+            await this.userRepository.findOne({ where: { id: userId }, relations: ["companies"] })
+        ).companies;
+        return companies.map(company => {
+            return this.buildCompanyRO(company);
+        });
     }
 
     async findOne(companyRO: CompanyData): Promise<CompanyEntity> {
