@@ -1,13 +1,17 @@
 import { InjectRepository } from "@nestjs/typeorm";
-import { EmployeeEntity } from "./employee.entity";
+
 import { Repository, getRepository, DeleteResult } from "typeorm";
+
 import { CompanyEntity } from "../company/company.entity";
+import { EmployeeEntity } from "./employee.entity";
 import { EmployeeRO } from "./employee.interface";
-import { NotFound } from "../shared/errors/404";
+
 import CreateEmployeeDto from "./dto/create-employee.dto";
-import { BadRequest } from "../shared/errors/400";
-import { validate } from "class-validator";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
+
+import { validate } from "class-validator";
+
+import Errors from "../shared/Errors";
 
 export class EmployeeService {
     constructor(
@@ -17,26 +21,29 @@ export class EmployeeService {
         private readonly companyRepository: Repository<CompanyEntity>
     ) {}
 
-    async findAll(userId: number, companyId: number): Promise<EmployeeEntity[]> {
-        return (
-            await this.companyRepository.findOne({ where: { id: companyId, owner: userId }, relations: ["employees"] })
-        ).employees;
+    private company: CompanyEntity;
+
+    async findAll(userId: number, companyId: number): Promise<EmployeeRO[]> {
+        await this.authorizeUser(userId, companyId);
+        const company: CompanyEntity = await this.companyRepository.findOne({
+            where: { id: companyId, owner: userId },
+            relations: ["employees"]
+        });
+        const employees: EmployeeEntity[] | undefined = company.employees;
+        return employees.map(employee => {
+            return this.buildEmployeeRO(employee, this.company);
+        });
     }
 
     async findById(userId: number, companyId: number, employeeId: number): Promise<EmployeeRO> {
-        const company = await this.companyRepository
-            .createQueryBuilder("company")
-            .where("company.id = :companyId", { companyId })
-            .andWhere("company.ownerId = :userId", { userId })
-            .getOne();
-        NotFound.companyNotFound(!!company);
+        await this.authorizeUser(userId, companyId);
         const employee = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :employeeId", { employeeId })
             .andWhere("employee.companyId = :companyId", { companyId })
             .getOne();
-        NotFound.employeeNotFound(!!employee);
-        return this.buildEmployeeRO(employee, company);
+        Errors.notFound(!!employee, { company: "Company not found" });
+        return this.buildEmployeeRO(employee, this.company);
     }
 
     async create(userId: number, companyId: number, dto: CreateEmployeeDto): Promise<EmployeeRO> {
@@ -52,13 +59,15 @@ export class EmployeeService {
             day_to_review
         } = dto.employee;
 
+        await this.authorizeUser(userId, companyId);
+
         const employee = await getRepository(EmployeeEntity)
             .createQueryBuilder("employee")
             .where("employee.first_name = :first_name", { first_name })
             .andWhere("employee.last_name = :last_name", { last_name })
             .getOne();
 
-        BadRequest.EmployeeExists(!!employee);
+        Errors.inputNotValid(!!employee, { employee: "Employee not valid" });
 
         let newEmployee = new EmployeeEntity();
         newEmployee.first_name = first_name;
@@ -80,7 +89,7 @@ export class EmployeeService {
             .getOne();
 
         const errors = await validate(newEmployee);
-        BadRequest.EmployeeNotValid(errors.length > 0);
+        Errors.inputNotValid(errors.length > 0, { employee: "Employee not valid" });
 
         const savedEmployee = await this.employeeRespository.save(newEmployee);
         if (Array.isArray(company.employees)) {
@@ -94,18 +103,13 @@ export class EmployeeService {
     }
 
     async update(userId: number, companyId: number, id: number, dto: UpdateEmployeeDto): Promise<EmployeeRO> {
-        const company = await this.companyRepository
-            .createQueryBuilder("company")
-            .where("company.id = :companyId", { companyId })
-            .andWhere("company.ownerId = :userId", { userId })
-            .getOne();
-        NotFound.companyNotFound(!!company);
+        await this.authorizeUser(userId, companyId);
         let toUpdate = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :id", { id })
             .andWhere("employee.companyId = :companyId", { companyId })
             .getOne();
-        NotFound.employeeNotFound(!!toUpdate);
+        Errors.notFound(!!toUpdate, { employee: "Employee not found" });
 
         delete toUpdate.first_name;
         delete toUpdate.last_name;
@@ -120,22 +124,28 @@ export class EmployeeService {
 
         let updated = Object.assign(toUpdate, dto.employee);
 
-        return this.buildEmployeeRO(await this.employeeRespository.save(updated), company);
+        return this.buildEmployeeRO(await this.employeeRespository.save(updated), this.company);
     }
 
     async delete(userId: number, companyId: number, employeeId: number): Promise<DeleteResult> {
+        await this.authorizeUser(userId, companyId);
+        let toDelete = await this.employeeRespository
+            .createQueryBuilder("employee")
+            .where("employee.id = :employeeId", { employeeId })
+            .andWhere("employee.companyId = :companyId", { companyId });
+        Errors.notFound(!!toDelete.getOne(), { employee: "Employee not found" });
+        return toDelete.delete().execute();
+    }
+
+    private async authorizeUser(userId: number = 0, companyId: number = 0) {
         const company = await this.companyRepository
             .createQueryBuilder("company")
             .where("company.id = :companyId", { companyId })
             .andWhere("company.ownerId = :userId", { userId })
             .getOne();
-        NotFound.companyNotFound(!!company);
-        let toDelete = await this.employeeRespository
-            .createQueryBuilder("employee")
-            .where("employee.id = :employeeId", { employeeId })
-            .andWhere("employee.companyId = :companyId", { companyId });
-        NotFound.employeeNotFound(!!toDelete.getOne());
-        return toDelete.delete().execute();
+        Errors.notAuthorized(!!company, { user: "User not authorized" });
+        this.company = company;
+        return;
     }
 
     private buildEmployeeRO(employee: EmployeeEntity, company: CompanyEntity) {

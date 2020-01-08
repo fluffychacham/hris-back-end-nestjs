@@ -1,51 +1,58 @@
-import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes } from '@nestjs/common';
-import { UserService } from './user.service';
-import { UserRO } from './user.interface';
-import { CreateUserDto, UpdateUserDto, LoginUserDto } from './dto';
-import { HttpException } from '@nestjs/common/exceptions/http.exception';
-import { User } from './user.decorator';
-import { ValidationPipe } from '../shared/pipes/validation.pipe';
+import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes } from "@nestjs/common";
+import { UserService } from "./user.service";
+import { UserRO } from "./user.interface";
+import { CreateUserDto, UpdateUserDto, LoginUserDto } from "./dto";
+import { HttpException } from "@nestjs/common/exceptions/http.exception";
+import { User } from "./user.decorator";
+import { ValidationPipe } from "../shared/pipes/validation.pipe";
 
-import { ApiBearerAuth } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags, ApiResponse } from "@nestjs/swagger";
 
 @ApiBearerAuth()
+@ApiTags("User Controller")
 @Controller()
 export class UserController {
+    constructor(private readonly userService: UserService) {}
 
-  constructor(private readonly userService: UserService) {}
+    @ApiResponse({ status: 200, description: "User found" })
+    @ApiResponse({ status: 404, description: "User email not found (email from token)" })
+    @Get("user")
+    async findMe(@User("email") email: string): Promise<UserRO> {
+        return await this.userService.findByEmail(email);
+    }
 
-  @Get('user')
-  async findMe(@User('email') email: string): Promise<UserRO> {
-    return await this.userService.findByEmail(email);
-  }
+    @ApiResponse({ status: 200, description: "User found" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
+    @ApiResponse({ status: 404, description: "User not found" })
+    @Put("user")
+    async update(@User("id") userId: number, @Body() userData: UpdateUserDto) {
+        return await this.userService.update(userId, userData);
+    }
 
-  @Put('user')
-  async update(@User('id') userId: number, @Body('user') userData: UpdateUserDto) {
-    return await this.userService.update(userId, userData);
-  }
+    @ApiResponse({ status: 201, description: "User created" })
+    @ApiResponse({ status: 400, description: "User already exists" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
+    @ApiResponse({ status: 404, description: "User not found" })
+    @UsePipes(new ValidationPipe())
+    @Post("users")
+    async create(@Body() userData: CreateUserDto) {
+        return this.userService.create(userData);
+    }
 
-  @UsePipes(new ValidationPipe())
-  @Post('users')
-  async create(@Body('user') userData: CreateUserDto) {
-    return this.userService.create(userData);
-  }
+    @ApiResponse({ status: 200, description: "User found" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
+    @ApiResponse({ status: 404, description: "User not found" })
+    @Delete("users/:email")
+    async delete(@Param("email") params: string) {
+        return await this.userService.delete(params);
+    }
 
-  @Delete('users/:slug')
-  async delete(@Param() params) {
-    return await this.userService.delete(params.slug);
-  }
-
-  @UsePipes(new ValidationPipe())
-  @Post('users/login')
-  async login(@Body('user') loginUserDto: LoginUserDto): Promise<UserRO> {
-    const _user = await this.userService.findOne(loginUserDto);
-
-    const errors = {User: ' not found'};
-    if (!_user) throw new HttpException({errors}, 401);
-
-    const token = await this.userService.generateJWT(_user);
-    const {email, username, bio, image} = _user;
-    const user = {email, token, username, bio, image};
-    return {user}
-  }
+    @ApiResponse({ status: 200, description: "User found" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
+    @ApiResponse({ status: 404, description: "User not found" })
+    @UsePipes(new ValidationPipe())
+    @Post("users/login")
+    async login(@Body() loginUserDto: LoginUserDto): Promise<UserRO> {
+        return await this.userService.findOne(loginUserDto);
+    }
 }

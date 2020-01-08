@@ -1,30 +1,33 @@
-import { HttpException } from '@nestjs/common';
-import { NestMiddleware, HttpStatus, Injectable } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import * as jwt from 'jsonwebtoken';
-import { SECRET } from '../config';
-import { UserService } from './user.service';
-import { Unauthorized } from '../shared/errors/401';
+import { NestMiddleware, Injectable } from "@nestjs/common";
+
+import { Request, Response, NextFunction } from "express";
+
+import * as jwt from "jsonwebtoken";
+
+import { SECRET } from "../config";
+
+import { UserService } from "./user.service";
+
+import Errors from "../shared/Errors";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  constructor(private readonly userService: UserService) {}
+    constructor(private readonly userService: UserService) {}
 
-  async use(req: Request, res: Response, next: NextFunction) {
-    const authHeaders = req.headers.authorization;
-    if (authHeaders && (authHeaders as string).split(' ')[1]) {
-      const token = (authHeaders as string).split(' ')[1];
-      const decoded: any = jwt.verify(token, SECRET);
-      const user = await this.userService.findById(decoded.id);
+    async use(req: Request, res: Response, next: NextFunction) {
+        const authHeaders = req.headers.authorization;
+        if (authHeaders && (authHeaders as string).split(" ")[1]) {
+            const token = (authHeaders as string).split(" ")[1];
+            const decoded: any = jwt.verify(token, SECRET);
+            const user = await this.userService.findById(decoded.id);
 
-      Unauthorized.UserNotFound(!!user);
+            Errors.notAuthorized(!!user, { user: "User not found" });
 
-      req.user = user.user;
-      req.user.id = decoded.id;
-      next();
-
-    } else {
-      Unauthorized.NotAuthorized(!true);
+            req.user = user.user;
+            req.user.id = decoded.id;
+            next();
+        } else {
+            Errors.notAuthorized(true, { user: "User not found" });
+        }
     }
-  }
 }

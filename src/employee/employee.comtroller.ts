@@ -16,6 +16,14 @@ export class EmployeeController {
     @ApiResponse({ status: 200, description: "Employee found" })
     @ApiResponse({ status: 404, description: "Employee not found" })
     @ApiResponse({ status: 401, description: "Unauthorized" })
+    @Get("company/:companyId/employees")
+    async findAll(@User("id") userId: number, @Param("companyId") companyId: number): Promise<EmployeeRO[]> {
+        return await this.employeeService.findAll(userId, companyId);
+    }
+
+    @ApiResponse({ status: 200, description: "Employee found" })
+    @ApiResponse({ status: 404, description: "Employee not found" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
     @Get("company/:companyId/employee/:id")
     async findById(
         @User("id") userId: number,

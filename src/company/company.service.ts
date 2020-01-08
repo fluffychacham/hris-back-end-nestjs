@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, getRepository, DeleteResult } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
 
 import { validate } from "class-validator";
 
@@ -10,8 +10,8 @@ import { UserEntity } from "../user/user.entity";
 import { CompanyData, CompanyRO } from "./company.interface";
 
 import { CreateCompanyDto, UpdateCompanyRO } from "./dto";
-import { BadRequest } from "../shared/errors/400";
-import { NotFound } from "../shared/errors/404";
+
+import Errors from "../shared/Errors";
 
 @Injectable()
 export class CompanyService {
@@ -31,7 +31,7 @@ export class CompanyService {
             name: companyRO.name
         };
         let toFindOne = await this.companyRepository.findOne(findOneOptions);
-        NotFound.companyNotFound(!!toFindOne);
+        Errors.notFound(!!toFindOne, { company: "Company not found" });
         return toFindOne;
     }
 
@@ -41,7 +41,7 @@ export class CompanyService {
             .where("company.ownerId = :userId", { userId })
             .andWhere("company.id = :id", { id })
             .getOne();
-        NotFound.companyNotFound(!!company);
+        Errors.notFound(!!company, { company: "Company not found" });
         return this.buildCompanyRO(company);
     }
 
@@ -60,7 +60,7 @@ export class CompanyService {
 
         const company = await qb.getOne();
 
-        BadRequest.CompanyExists(!!company);
+        Errors.inputNotValid(!!company, { company: "Company already exists" });
 
         let newCompany = new CompanyEntity();
         newCompany.name = name;
@@ -91,7 +91,7 @@ export class CompanyService {
             .where("company.ownerId = :userId", { userId })
             .andWhere("company.id = :id", { id })
             .getOne();
-        NotFound.companyNotFound(!!toUpdate);
+        Errors.notFound(!!toUpdate, { company: "Company not found" });
         delete toUpdate.name;
         delete toUpdate.description;
         delete toUpdate.domain;
@@ -105,7 +105,7 @@ export class CompanyService {
             .createQueryBuilder("company")
             .where("company.ownerId = :userId", { userId })
             .andWhere("company.id = :id", { id });
-        NotFound.companyNotFound(!!toDelete);
+        Errors.notFound(!!toDelete, { company: "Company not found" });
         return toDelete.delete().execute();
     }
 
