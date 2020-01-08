@@ -1,7 +1,17 @@
-import { IsNotEmpty } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+
+class CreateCompanyData {
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
+    domain: string;
+
+    @ApiPropertyOptional()
+    description: string;
+}
 
 export class CreateCompanyDto {
-    @IsNotEmpty()
-    readonly name: string;
-    readonly description: string;
+    @ApiProperty()
+    readonly company: CreateCompanyData;
 }
