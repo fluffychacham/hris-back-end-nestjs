@@ -5,6 +5,9 @@ export class EmployeeData {
     id: number;
 
     @ApiProperty()
+    email: string;
+
+    @ApiProperty()
     first_name: string;
 
     @ApiProperty()
@@ -39,6 +42,9 @@ export class EmployeeData {
 
     @ApiProperty()
     day_to_review: Date;
+
+    @ApiProperty()
+    token: string;
 }
 
 export class EmployeeRO {

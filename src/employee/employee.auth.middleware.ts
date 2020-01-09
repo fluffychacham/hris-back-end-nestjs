@@ -6,28 +6,28 @@ import * as jwt from "jsonwebtoken";
 
 import { SECRET } from "../config";
 
-import { UserService } from "./user.service";
+import { EmployeeService } from "./employee.service";
 
 import Errors from "../shared/Errors";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-    constructor(private readonly userService: UserService) {}
+    constructor(private readonly employeeService: EmployeeService) {}
 
     async use(req: Request, res: Response, next: NextFunction) {
         const authHeaders = req.headers.authorization;
         if (authHeaders && (authHeaders as string).split(" ")[1]) {
             const token = (authHeaders as string).split(" ")[1];
             const decoded: any = jwt.verify(token, SECRET);
-            const user = await this.userService.findById(decoded.id);
+            const employee = await this.employeeService.findByEmail(decoded.email);
 
-            Errors.notAuthorized(!!user, { user: "User not authorized" });
+            Errors.notAuthorized(!!employee, { employee: "Employee not authorized" });
 
-            req.user = user.user;
-            req.user.id = decoded.id;
+            req.employee = employee.employee;
+            req.employee.id = decoded.id;
             next();
         } else {
-            Errors.notAuthorized(true, { user: "User not authorized" });
+            Errors.notAuthorized(true, { employee: "Employee not authorized" });
         }
     }
 }

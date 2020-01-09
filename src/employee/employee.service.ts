@@ -13,6 +13,10 @@ import { validate } from "class-validator";
 
 import Errors from "../shared/Errors";
 
+import { SECRET } from "../config";
+
+const jwt = require("jsonwebtoken");
+
 export class EmployeeService {
     constructor(
         @InjectRepository(EmployeeEntity)
@@ -23,13 +27,22 @@ export class EmployeeService {
 
     private company: CompanyEntity;
 
+    async findByEmail(email: string): Promise<EmployeeRO> {
+        const employee = await this.employeeRespository
+            .createQueryBuilder("employee")
+            .where("employee.email = :email", { email })
+            .leftJoinAndSelect("employee.company", "company")
+            .getOne();
+        return this.buildEmployeeRO(employee, employee.company);
+    }
+
     async findAll(userId: number, companyId: number): Promise<EmployeeRO[]> {
         await this.authorizeUser(userId, companyId);
         const company: CompanyEntity = await this.companyRepository.findOne({
             where: { id: companyId, owner: userId },
             relations: ["employees"]
         });
-        const employees: EmployeeEntity[] | undefined = company.employees;
+        const employees = company.employees;
         return employees.map(employee => {
             return this.buildEmployeeRO(employee, this.company);
         });
@@ -137,6 +150,22 @@ export class EmployeeService {
         return toDelete.delete().execute();
     }
 
+    private generateJwt(employee: EmployeeEntity) {
+        let today = new Date();
+        let exp = new Date(today);
+
+        exp.setDate(today.getDate() + 60);
+
+        return jwt.sign(
+            {
+                id: employee.id,
+                email: employee.email,
+                exp: exp.getTime() / 1000
+            },
+            SECRET
+        );
+    }
+
     private async authorizeUser(userId: number = 0, companyId: number = 0) {
         const company = await this.companyRepository
             .createQueryBuilder("company")
@@ -151,6 +180,7 @@ export class EmployeeService {
     private buildEmployeeRO(employee: EmployeeEntity, company: CompanyEntity) {
         const employeeRO = {
             id: employee.id,
+            email: employee.email,
             first_name: employee.first_name,
             last_name: employee.last_name,
             created: employee.created,
@@ -162,7 +192,8 @@ export class EmployeeService {
             education_funds: employee.education_funds,
             phone_number: employee.phone_number,
             fitness_grant: employee.fitness_grant,
-            day_to_review: employee.day_to_review
+            day_to_review: employee.day_to_review,
+            token: this.generateJwt(employee)
         };
 
         return { employee: employeeRO };
