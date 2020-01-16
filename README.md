@@ -1,5 +1,3 @@
-# ![Node/NestJS/MySQL HRIS App](project-logo.png)
-
 [![Build Status](https://travis-ci.org/fluffychacham/hris-back-end-nestjs.svg?branch=master)](https://travis-ci.org/fluffychacham/hris-back-end-nestjs)
 
 
