@@ -1,8 +1,6 @@
-# ![Node/Express/Mongoose Example App](project-logo.png)
+# ![Node/Express/Mongoose HRIS App](project-logo.png)
 
 [![Build Status](https://travis-ci.org/fluffychacham/hris-back-end-nestjs.svg?branch=master)](https://travis-ci.org/fluffychacham/hris-back-end-nestjs)
-
-> ### NestJS codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) API spec.
 
 
 ----------
@@ -10,30 +8,22 @@
 # Getting started
 
 ## Installation
-
-Clone the repository
-
-    git clone git@github.com:lujakob/nestjs-realworld-example-app.git
-
-Switch to the repo folder
-
-    cd nestjs-realworld-example-app
     
 Install dependencies
     
-    npm install
+ - `npm ci`
 
 Copy config file and set JsonWebToken secret key
 
-    cp src/config.ts.example src/config.ts
+ - `cp src/config.example.ts src/config.ts`
     
 ----------
 
 ## Database
 
-The example codebase uses [Typeorm](http://typeorm.io/) with a mySQL database.
+The codebase uses [Typeorm](http://typeorm.io/) with a mySQL database.
 
-Create a new mysql database with the name `nestjsrealworld` (or the name you specified in the ormconfig.json)
+Create a new mysql database with the name `hrisapplication` (or the name you specified in the ormconfig.json)
 
 Copy Typeorm config example file for database settings
 
@@ -47,12 +37,12 @@ Set mysql database settings in ormconfig.json
       "port": 3306,
       "username": "your-mysql-username",
       "password": "your-mysql-password",
-      "database": "nestjsrealworld",
+      "database": "hrisapplication",
       "entities": ["src/**/**.entity{.ts,.js}"],
       "synchronize": true
     }
     
-Start local mysql server and create new database 'nestjsrealworld'
+Start local mysql server and create new database 'hrisapplication'
 
 On application start, tables for all entities will be created.
 
@@ -67,20 +57,10 @@ On application start, tables for all entities will be created.
 
 ----------
 
-## API Specification
-
-This application adheres to the api specifications set by the [Thinkster](https://github.com/gothinkster) team. This helps mix and match any backend with any other frontend without conflicts.
-
-> [Full API Spec](https://github.com/gothinkster/realworld/tree/master/api)
-
-More information regarding the project can be found here https://github.com/gothinkster/realworld
-
-----------
-
 ## Start application
 
 - `npm start`
-- Test api with `http://localhost:3000/api/articles` in your favourite browser
+- Test api with `http://localhost:4000/api` in the browser
 
 ----------
 
@@ -92,4 +72,6 @@ This applications uses JSON Web Token (JWT) to handle authentication. The token 
  
 # Swagger API docs
 
-This example repo uses the NestJS swagger module for API documentation. [NestJS Swagger](https://github.com/nestjs/swagger) - [www.swagger.io](https://swagger.io/)        
+This repo uses the NestJS swagger module for API documentation. [NestJS Swagger](https://github.com/nestjs/swagger) - [www.swagger.io](https://swagger.io/)   
+
+Swagger Docs can be accessed by going to `http://localhost:4000/docs`
