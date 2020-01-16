@@ -1,4 +1,4 @@
-# ![Node/Express/Mongoose HRIS App](project-logo.png)
+# ![Node/NestJS/MySQL HRIS App](project-logo.png)
 
 [![Build Status](https://travis-ci.org/fluffychacham/hris-back-end-nestjs.svg?branch=master)](https://travis-ci.org/fluffychacham/hris-back-end-nestjs)
 
@@ -11,17 +11,17 @@
     
 Install dependencies
     
- - `npm ci`
+    npm ci
 
 Copy config file and set JsonWebToken secret key
 
- - `cp src/config.example.ts src/config.ts`
+    cp src/config.example.ts src/config.ts
     
 ----------
 
 ## Database
 
-The codebase uses [Typeorm](http://typeorm.io/) with a mySQL database.
+The codebase uses [Typeorm](http://typeorm.io/) with a MySQL database.
 
 Create a new mysql database with the name `hrisapplication` (or the name you specified in the ormconfig.json)
 
@@ -74,4 +74,4 @@ This applications uses JSON Web Token (JWT) to handle authentication. The token 
 
 This repo uses the NestJS swagger module for API documentation. [NestJS Swagger](https://github.com/nestjs/swagger) - [www.swagger.io](https://swagger.io/)   
 
-Swagger Docs can be accessed by going to `http://localhost:4000/docs`
+Swagger docs can be accessed by going to `http://localhost:4000/docs`
