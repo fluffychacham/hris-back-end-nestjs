@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Put, Body, Post, UsePipes, ValidationPipe, Delete } from "@nestjs/common";
-import { ApiTags, ApiBearerAuth, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation } from "@nestjs/swagger";
 
 import { CompanyService } from "./company.service";
 import { CompanyRO } from "./company.interface";
@@ -16,6 +16,7 @@ import { User } from "../user/user.decorator";
 export class CompanyController {
     constructor(private readonly companyService: CompanyService) {}
 
+    @ApiOperation({ summary: "List all companies" })
     @ApiResponse({ status: 200, type: [CompanyRO], description: "List of companies found" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })
@@ -24,6 +25,7 @@ export class CompanyController {
         return await this.companyService.findAll(userId);
     }
 
+    @ApiOperation({ summary: "Find company by id" })
     @ApiResponse({ status: 200, type: CompanyRO, description: "Company found" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
@@ -33,6 +35,7 @@ export class CompanyController {
         return await this.companyService.findById(userId, id);
     }
 
+    @ApiOperation({ summary: "Update company by id" })
     @ApiResponse({ status: 200, type: CompanyRO, description: "Company update successful" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
@@ -46,6 +49,7 @@ export class CompanyController {
         return await this.companyService.update(userId, id, dto);
     }
 
+    @ApiOperation({ summary: "Create company" })
     @ApiResponse({ status: 201, type: CompanyRO, description: "Create company successful" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })
@@ -55,7 +59,8 @@ export class CompanyController {
         return await this.companyService.create(userId, dto);
     }
 
-    @ApiResponse({ status: 200, type: DeleteResult, description: "Company deleted" })
+    @ApiOperation({ summary: "Delete company by id" })
+    @ApiResponse({ status: 200, type: DeleteResult, description: "Delete company successful" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })

@@ -2,6 +2,7 @@ import { IsNotEmpty, IsEmail } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class LoginEmployeeData {
+    
     @ApiProperty()
     @IsNotEmpty()
     @IsEmail()
@@ -13,5 +14,6 @@ export class LoginEmployeeData {
 }
 
 export class LoginEmployeeDto {
+    @ApiProperty()
     employee: LoginEmployeeData;
 }

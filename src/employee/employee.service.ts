@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { InjectRepository } from "@nestjs/typeorm";
 
 import { Repository, getRepository, DeleteResult } from "typeorm";
@@ -8,14 +9,14 @@ import { EmployeeRO } from "./employee.interface";
 
 import CreateEmployeeDto from "./dto/create-employee.dto";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
+import { LoginEmployeeDto } from "./dto/login-employee.dto";
+import { LoginEmployeeRO } from "./login-employee.interface";
+import * as jwt from '../shared/jwt';
+import { stringify } from 'querystring';
 
 import { validate } from "class-validator";
 
 import Errors from "../shared/Errors";
-
-import { SECRET } from "../config";
-
-const jwt = require("jsonwebtoken");
 
 export class EmployeeService {
     constructor(
@@ -37,7 +38,6 @@ export class EmployeeService {
     }
 
     async findAll(userId: number, companyId: number): Promise<EmployeeRO[]> {
-        await this.authorizeUser(userId, companyId);
         const company: CompanyEntity = await this.companyRepository.findOne({
             where: { id: companyId, owner: userId },
             relations: ["employees"]
@@ -49,7 +49,6 @@ export class EmployeeService {
     }
 
     async findById(userId: number, companyId: number, employeeId: number): Promise<EmployeeRO> {
-        await this.authorizeUser(userId, companyId);
         const employee = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :employeeId", { employeeId })
@@ -72,8 +71,6 @@ export class EmployeeService {
             day_to_review
         } = dto.employee;
 
-        await this.authorizeUser(userId, companyId);
-
         const employee = await getRepository(EmployeeEntity)
             .createQueryBuilder("employee")
             .where("employee.first_name = :first_name", { first_name })
@@ -93,8 +90,9 @@ export class EmployeeService {
         newEmployee.fitness_grant = fitness_grant;
         newEmployee.day_to_review = day_to_review;
 
+        newEmployee.password = stringify(Math.random());
+
         const company = await this.companyRepository
-            // .findOne({ where: { id: companyId }, relations: ["employees"] });
             .createQueryBuilder("company")
             .where("company.id = :companyId", { companyId })
             .andWhere("company.ownerId = :userId", { userId })
@@ -116,7 +114,6 @@ export class EmployeeService {
     }
 
     async update(userId: number, companyId: number, id: number, dto: UpdateEmployeeDto): Promise<EmployeeRO> {
-        await this.authorizeUser(userId, companyId);
         let toUpdate = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :id", { id })
@@ -141,7 +138,6 @@ export class EmployeeService {
     }
 
     async delete(userId: number, companyId: number, employeeId: number): Promise<DeleteResult> {
-        await this.authorizeUser(userId, companyId);
         let toDelete = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :employeeId", { employeeId })
@@ -150,31 +146,13 @@ export class EmployeeService {
         return toDelete.delete().execute();
     }
 
-    private generateJwt(employee: EmployeeEntity) {
-        let today = new Date();
-        let exp = new Date(today);
-
-        exp.setDate(today.getDate() + 60);
-
-        return jwt.sign(
-            {
-                id: employee.id,
-                email: employee.email,
-                exp: exp.getTime() / 1000
-            },
-            SECRET
-        );
-    }
-
-    private async authorizeUser(userId: number = 0, companyId: number = 0) {
-        const company = await this.companyRepository
-            .createQueryBuilder("company")
-            .where("company.id = :companyId", { companyId })
-            .andWhere("company.ownerId = :userId", { userId })
-            .getOne();
-        Errors.notAuthorized(!!company, { user: "User not authorized" });
-        this.company = company;
-        return;
+    async loginEmployee(dto: LoginEmployeeDto): Promise<LoginEmployeeRO> {
+        const { email, password } = dto.employee;
+        const findOptions = { email, password: crypto.createHmac("sha256", password).digest("hex") };
+        const employee = await this.employeeRespository.findOne(findOptions);
+        const token = jwt.generateJWT(employee);
+        const company_name = employee.company.name;
+        return { employee: { ...employee, token, company_name } };
     }
 
     private buildEmployeeRO(employee: EmployeeEntity, company: CompanyEntity) {
@@ -193,7 +171,7 @@ export class EmployeeService {
             phone_number: employee.phone_number,
             fitness_grant: employee.fitness_grant,
             day_to_review: employee.day_to_review,
-            token: this.generateJwt(employee)
+            token: jwt.generateJWT(employee)
         };
 
         return { employee: employeeRO };

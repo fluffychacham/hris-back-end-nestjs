@@ -3,27 +3,24 @@ import { ProfileService } from './profile.service';
 import { ProfileRO } from './profile.interface';
 import { User } from '../user/user.decorator';
 
+<<<<<<< HEAD
 import { ApiBearerAuth } from "@nestjs/swagger";
 
 @ApiBearerAuth()
+=======
+import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+
+@ApiBearerAuth()
+@ApiTags('profiles')
+>>>>>>> 635d760783eac8ac3563eb56146f0849ac448b72
 @Controller('profiles')
 export class ProfileController {
 
   constructor(private readonly profileService: ProfileService) {}
 
-  @Get(':username')
-  async getProfile(@User('id') userId: number, @Param('username') username: string): Promise<ProfileRO> {
-    return await this.profileService.findProfile(userId, username);
-  }
-
-  @Post(':username/follow')
-  async follow(@User('email') email: string, @Param('username') username: string): Promise<ProfileRO> {
-    return await this.profileService.follow(email, username);
-  }
-
-  @Delete(':username/follow')
-  async unFollow(@User('id') userId: number,  @Param('username') username: string): Promise<ProfileRO> {
-    return await this.profileService.unFollow(userId, username);
+  @Get(':email')
+  async getProfile(@User('id') userId: number, @Param('email') email: string): Promise<ProfileRO> {
+    return await this.profileService.findProfile(userId, email);
   }
 
 }

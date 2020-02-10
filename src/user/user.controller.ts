@@ -6,59 +6,53 @@ import { HttpException } from "@nestjs/common/exceptions/http.exception";
 import { User } from "./user.decorator";
 import { ValidationPipe } from "../shared/pipes/validation.pipe";
 
-import { ApiBearerAuth, ApiTags, ApiResponse } from "@nestjs/swagger";
-import { DeleteResult } from "typeorm";
+import { ApiTags, ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
+
+import * as jwt from '../shared/jwt';
 
 @ApiBearerAuth()
-@ApiTags("User Controller")
+@ApiTags('user')
 @Controller()
 export class UserController {
-    constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
-    @ApiResponse({ status: 200, type: UserRO, description: "User found" })
-    @ApiResponse({ status: 404, description: "User email not found (email from token)" })
-    @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @Get("user")
-    async findMe(@User("email") email: string): Promise<UserRO> {
-        return await this.userService.findByEmail(email);
-    }
+  @ApiOperation({ summary: "Get user" })
+  @Get('user')
+  async findMe(@User('email') email: string): Promise<UserRO> {
+    return await this.userService.findByEmail(email);
+  }
 
-    @ApiResponse({ status: 200, type: UserRO, description: "User found" })
-    @ApiResponse({ status: 401, description: "Unauthorized" })
-    @ApiResponse({ status: 404, description: "User not found" })
-    @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @Put("user")
-    async update(@User("id") userId: number, @Body() userData: UpdateUserDto): Promise<UserRO> {
-        return await this.userService.update(userId, userData);
-    }
+  @ApiOperation({ summary: "Update user" })
+  @Put('user')
+  async update(@User('id') userId: number, @Body() dto: UpdateUserDto) {
+    return await this.userService.update(userId, dto);
+  }
 
-    @ApiResponse({ status: 201, type: UserRO, description: "User created" })
-    @ApiResponse({ status: 400, description: "User already exists" })
-    @ApiResponse({ status: 401, description: "Unauthorized" })
-    @ApiResponse({ status: 404, description: "User not found" })
-    @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @UsePipes(new ValidationPipe())
-    @Post("users")
-    async create(@Body() userData: CreateUserDto): Promise<UserRO> {
-        return this.userService.create(userData);
-    }
+  @ApiOperation({ summary: "Create user" })
+  @UsePipes(new ValidationPipe())
+  @Post('user/register')
+  async create(@Body() dto: CreateUserDto) {
+    return this.userService.create(dto);
+  }
 
-    @ApiResponse({ status: 200, type: DeleteResult, description: "User deleted" })
-    @ApiResponse({ status: 401, description: "Unauthorized" })
-    @ApiResponse({ status: 404, description: "User not found" })
-    @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @Delete("users/:email")
-    async delete(@Param("email") params: string): Promise<DeleteResult> {
-        return await this.userService.delete(params);
-    }
+  @ApiOperation({ summary: "Delete user" })
+  @Delete('user/:id')
+  async delete(@Param("id") id) {
+    return await this.userService.delete(id);
+  }
 
-    @ApiResponse({ status: 200, type: UserRO, description: "User found" })
-    @ApiResponse({ status: 401, description: "Unauthorized" })
-    @ApiResponse({ status: 404, description: "User not found" })
-    @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @UsePipes(new ValidationPipe())
-    @Post("users/login")
-    async login(@Body() loginUserDto: LoginUserDto): Promise<UserRO> {
-        return await this.userService.findOne(loginUserDto);
-    }
+  @ApiOperation({ summary: "Login user" })
+  @UsePipes(new ValidationPipe())
+  @Post('user/login')
+  async login(@Body() dto: LoginUserDto): Promise<UserRO> {
+    const _user = await this.userService.findOne(dto);
+
+    const errors = { User: " not found" };
+    if (!_user) throw new HttpException({ errors }, 401);
+
+    const token = await jwt.generateJWT(_user);
+    const { email, bio, image } = _user;
+    const user = { email, token, bio, image };
+    return { user };
+  }
 }
