@@ -5,6 +5,9 @@ export class EmployeeData {
     id: number;
 
     @ApiProperty()
+    email: string;
+
+    @ApiProperty()
     first_name: string;
 
     @ApiProperty()

@@ -6,7 +6,7 @@ import { UserEntity } from "../user/user.entity";
 import { UserModule } from "../user/user.module";
 import { CompanyEntity } from "../company/company.entity";
 import { EmployeeService } from "./employee.service";
-import { EmployeeController } from "./employee.comtroller";
+import { EmployeeController } from "./employee.controller";
 
 @Module({
     imports: [TypeOrmModule.forFeature([EmployeeEntity, CompanyEntity, UserEntity]), UserModule],

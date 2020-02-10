@@ -1,11 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeUpdate, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, BeforeUpdate, ManyToOne, BeforeInsert } from "typeorm";
 import { CompanyEntity } from "../company/company.entity";
-import { UserEntity } from "../user/user.entity";
+import * as crypto from 'crypto';
 
 @Entity("employee")
 export class EmployeeEntity {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column({ default: "" })
+    email: string;
+
+    @Column()
+    password: string;
 
     @Column({ default: "" })
     first_name: string;
@@ -28,6 +34,11 @@ export class EmployeeEntity {
     @BeforeUpdate()
     updateTimestamp() {
         this.updated = new Date();
+    }
+
+    @BeforeInsert()
+    hashPassword() {
+        this.password = crypto.createHmac('sha256', this.password).digest('hex');
     }
 
     @Column({ default: 0 })

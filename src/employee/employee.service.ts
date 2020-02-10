@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { InjectRepository } from "@nestjs/typeorm";
 import { EmployeeEntity } from "./employee.entity";
 import { Repository, getRepository, DeleteResult } from "typeorm";
@@ -8,6 +9,10 @@ import CreateEmployeeDto from "./dto/create-employee.dto";
 import { BadRequest } from "../shared/errors/400";
 import { validate } from "class-validator";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
+import { LoginEmployeeDto } from "./dto/login-employee.dto";
+import { LoginEmployeeRO } from "./login-employee.interface";
+import * as jwt from '../shared/jwt';
+import { stringify } from 'querystring';
 
 export class EmployeeService {
     constructor(
@@ -71,8 +76,9 @@ export class EmployeeService {
         newEmployee.fitness_grant = fitness_grant;
         newEmployee.day_to_review = day_to_review;
 
+        newEmployee.password = stringify(Math.random());
+
         const company = await this.companyRepository
-            // .findOne({ where: { id: companyId }, relations: ["employees"] });
             .createQueryBuilder("company")
             .where("company.id = :companyId", { companyId })
             .andWhere("company.ownerId = :userId", { userId })
@@ -138,9 +144,19 @@ export class EmployeeService {
         return toDelete.delete().execute();
     }
 
+    async loginEmployee(dto: LoginEmployeeDto): Promise<LoginEmployeeRO> {
+        const { email, password } = dto.employee;
+        const findOptions = { email, password: crypto.createHmac("sha256", password).digest("hex") };
+        const employee = await this.employeeRespository.findOne(findOptions);
+        const token = jwt.generateJWT(employee);
+        const company_name = employee.company.name;
+        return { employee: { ...employee, token, company_name } };
+    }
+
     private buildEmployeeRO(employee: EmployeeEntity, company: CompanyEntity) {
         const employeeRO = {
             id: employee.id,
+            email: employee.email,
             first_name: employee.first_name,
             last_name: employee.last_name,
             created: employee.created,
