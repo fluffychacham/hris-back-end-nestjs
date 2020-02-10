@@ -6,19 +6,7 @@
         "port": 3306,
         "username": "nestjs-test",
         "password": "nestjs-test",
-        "database": "hrisapplication",
-        "entities": ["src/**/**.entity{.ts,.js}"],
-        "synchronize": true
-    },
-    {
-        "name": "test",
-        "type": "mysql",
-        "host": "localhost",
-        "port": 3306,
-        "username": "nestjs-test",
-        "password": "nestjs-test",
-        "database": "hrisapplication",
-        "dropSchema": true,
+        "database": "hris",
         "entities": ["src/**/**.entity{.ts,.js}"],
         "synchronize": true
     }

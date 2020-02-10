@@ -38,6 +38,7 @@ export class EmployeeService {
     }
 
     async findAll(userId: number, companyId: number): Promise<EmployeeRO[]> {
+        await this.authorizeUser(userId, companyId);
         const company: CompanyEntity = await this.companyRepository.findOne({
             where: { id: companyId, owner: userId },
             relations: ["employees"]
@@ -49,12 +50,13 @@ export class EmployeeService {
     }
 
     async findById(userId: number, companyId: number, employeeId: number): Promise<EmployeeRO> {
+        await this.authorizeUser(userId, companyId);
         const employee = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :employeeId", { employeeId })
             .andWhere("employee.companyId = :companyId", { companyId })
             .getOne();
-        Errors.notFound(!!employee, { company: "Company not found" });
+        Errors.notFound(!!employee, { employee: "Employee not found" });
         return this.buildEmployeeRO(employee, this.company);
     }
 
@@ -114,6 +116,7 @@ export class EmployeeService {
     }
 
     async update(userId: number, companyId: number, id: number, dto: UpdateEmployeeDto): Promise<EmployeeRO> {
+        await this.authorizeUser(userId, companyId);
         let toUpdate = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :id", { id })
@@ -131,13 +134,15 @@ export class EmployeeService {
         delete toUpdate.fitness_grant;
         delete toUpdate.day_to_review;
         delete toUpdate.created;
+        delete toUpdate.company;
 
-        let updated = Object.assign(toUpdate, dto.employee);
+        const updated = Object.assign(toUpdate, dto.employee);
 
         return this.buildEmployeeRO(await this.employeeRespository.save(updated), this.company);
     }
 
     async delete(userId: number, companyId: number, employeeId: number): Promise<DeleteResult> {
+        await this.authorizeUser(userId, companyId);
         let toDelete = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.id = :employeeId", { employeeId })
@@ -155,6 +160,17 @@ export class EmployeeService {
         return { employee: { ...employee, token, company_name } };
     }
 
+    private async authorizeUser(userId: number = 0, companyId: number = 0) {
+        const company = await this.companyRepository
+            .createQueryBuilder("company")
+            .where("company.id = :companyId", { companyId })
+            .andWhere("company.ownerId = :userId", { userId })
+            .getOne();
+        Errors.notAuthorized(!!company, { user: "User not authorized" });
+        this.company = company;
+        return;
+    }
+
     private buildEmployeeRO(employee: EmployeeEntity, company: CompanyEntity) {
         const employeeRO = {
             id: employee.id,
@@ -170,8 +186,7 @@ export class EmployeeService {
             education_funds: employee.education_funds,
             phone_number: employee.phone_number,
             fitness_grant: employee.fitness_grant,
-            day_to_review: employee.day_to_review,
-            token: jwt.generateJWT(employee)
+            day_to_review: employee.day_to_review
         };
 
         return { employee: employeeRO };

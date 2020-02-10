@@ -1,10 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, BeforeUpdate, ManyToOne, BeforeInsert } from "typeorm";
 import { CompanyEntity } from "../company/company.entity";
-<<<<<<< HEAD
-import * as crypto from "crypto";
-=======
 import * as crypto from 'crypto';
->>>>>>> 635d760783eac8ac3563eb56146f0849ac448b72
 
 @Entity("employee")
 export class EmployeeEntity {
@@ -17,14 +13,6 @@ export class EmployeeEntity {
     @Column()
     password: string;
 
-<<<<<<< HEAD
-    @BeforeInsert()
-    hashPassword() {
-        this.password = crypto.createHmac("sha256", this.password).digest("hex");
-    }
-
-=======
->>>>>>> 635d760783eac8ac3563eb56146f0849ac448b72
     @Column({ default: "" })
     first_name: string;
 

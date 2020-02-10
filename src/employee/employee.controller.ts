@@ -16,7 +16,7 @@ export class EmployeeController {
     constructor(private readonly employeeService: EmployeeService) {}
 
     @ApiOperation({ summary: "Find employee by id" })
-    @ApiResponse({ status: 200, type: EmployeeRO, description: "Employee found" })
+    @ApiResponse({ status: 200, type: [EmployeeRO], description: "Employee found" })
     @ApiResponse({ status: 404, description: "Employee not found" })
     @ApiResponse({ status: 401, description: "Unauthorized" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })

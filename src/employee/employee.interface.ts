@@ -42,9 +42,6 @@ export class EmployeeData {
 
     @ApiProperty()
     day_to_review: Date;
-
-    @ApiProperty()
-    token: string;
 }
 
 export class EmployeeRO {
