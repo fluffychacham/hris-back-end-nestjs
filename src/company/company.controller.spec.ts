@@ -1,16 +1,12 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import * as request from "supertest";
 import { CompanyController } from "../company/company.controller";
-import { CompanyModule } from "../company/company.module";
 import { CompanyEntity } from "../company/company.entity";
 import { CompanyService } from "./company.service";
-import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
-import { Repository, getConnectionOptions } from "typeorm";
-import { CompanyRO } from "./company.interface";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { getConnectionOptions } from "typeorm";
 import { INestApplication } from "@nestjs/common";
 import { UserEntity } from "../user/user.entity";
-import { UserModule } from "../user/user.module";
-import { UserService } from "../user/user.service";
 
 describe("Company Controller", () => {
     let companyService: CompanyService;
@@ -57,15 +53,6 @@ describe("Company Controller", () => {
         });
     });
 
-    describe("findAll", () => {
-        it("should return an array of companies", async () => {
-            jest.spyOn(companyService, "findAll").mockImplementation(() => Promise.resolve(companies));
-
-            const findAllResult = await companyController.findAll(1);
-            expect(findAllResult).toBe(companies);
-        });
-    });
-
     describe("findById", () => {
         it("should return a CompanyRO", async () => {
             const companyRO = { company: companies[1] };
@@ -74,23 +61,4 @@ describe("Company Controller", () => {
             expect(findAllResult.company.name).toEqual("lido");
         });
     });
-
-    // describe("update", () => {
-    //     it("should return CompanyEntity", async () => {
-    //         const updatedCompanyData = {
-    //             company: createCompany(
-    //                 1,
-    //                 "updated name",
-    //                 "updated description",
-    //                 "updated domain",
-    //                 "updated date",
-    //                 "updated date"
-    //             )
-    //         };
-
-    //         jest.spyOn(companyService, "update").mockImplementation(() => Promise.resolve(updatedCompanyData));
-    //         const updateResult = await companyController.update(1, 1, updatedCompanyData);
-    //         expect(updateResult).toBe(updatedCompanyData);
-    //     });
-    // });
 });

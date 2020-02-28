@@ -1,16 +1,11 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { Repository, getRepository, DeleteResult } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
-
 import { validate } from "class-validator";
-
 import { CompanyEntity } from "./company.entity";
 import { UserEntity } from "../user/user.entity";
-
 import { CompanyData, CompanyRO } from "./company.interface";
-
 import { CreateCompanyDto, UpdateCompanyRO } from "./dto";
-
 import Errors from "../shared/Errors";
 
 @Injectable()

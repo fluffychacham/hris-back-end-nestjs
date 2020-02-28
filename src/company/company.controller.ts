@@ -3,7 +3,6 @@ import { ApiTags, ApiBearerAuth, ApiResponse, ApiOperation } from "@nestjs/swagg
 
 import { CompanyService } from "./company.service";
 import { CompanyRO } from "./company.interface";
-import { CompanyEntity } from "./company.entity";
 
 import { UpdateCompanyRO } from "./dto/update-company.dto";
 import { CreateCompanyDto } from "./dto/create-company.dto";
@@ -12,7 +11,7 @@ import { User } from "../user/user.decorator";
 
 @ApiBearerAuth()
 @ApiTags("Company Controller")
-@Controller()
+@Controller('company')
 export class CompanyController {
     constructor(private readonly companyService: CompanyService) {}
 
@@ -20,7 +19,7 @@ export class CompanyController {
     @ApiResponse({ status: 200, type: [CompanyRO], description: "List of companies found" })
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @Get("companies")
+    @Get("/")
     async findAll(@User("id") userId: number): Promise<CompanyRO[]> {
         return await this.companyService.findAll(userId);
     }
@@ -30,7 +29,7 @@ export class CompanyController {
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @Get("company/:id")
+    @Get("/:id")
     async findById(@User("id") userId: number, @Param("id") id: number): Promise<CompanyRO> {
         return await this.companyService.findById(userId, id);
     }
@@ -40,7 +39,7 @@ export class CompanyController {
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @Put("company/:id")
+    @Put("/:id")
     async update(
         @User("id") userId: number,
         @Param("id") id: number,
@@ -54,7 +53,7 @@ export class CompanyController {
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })
     @UsePipes(new ValidationPipe())
-    @Post("company")
+    @Post("/")
     async create(@Body() dto: CreateCompanyDto, @User("id") userId: number): Promise<CompanyRO> {
         return await this.companyService.create(userId, dto);
     }
@@ -64,7 +63,7 @@ export class CompanyController {
     @ApiResponse({ status: 401, description: "Not authorized" })
     @ApiResponse({ status: 404, description: "Not found" })
     @ApiResponse({ status: 500, description: "Internal Server Error" })
-    @Delete("company/:id")
+    @Delete("/:id")
     async delete(@User("id") userId: number, @Param("id") id: number): Promise<DeleteResult> {
         return await this.companyService.delete(userId, id);
     }

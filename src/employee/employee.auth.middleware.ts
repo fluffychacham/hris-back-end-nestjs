@@ -1,13 +1,8 @@
 import { NestMiddleware, Injectable } from "@nestjs/common";
-
 import { Request, Response, NextFunction } from "express";
-
 import * as jwt from "jsonwebtoken";
-
 import { SECRET } from "../config";
-
 import { EmployeeService } from "./employee.service";
-
 import Errors from "../shared/Errors";
 
 @Injectable()

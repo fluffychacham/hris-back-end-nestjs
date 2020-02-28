@@ -1,5 +1,5 @@
-import {Entity, PrimaryGeneratedColumn, Column, BeforeInsert, JoinTable, ManyToMany, OneToMany} from "typeorm";
-import { IsEmail, Validate } from 'class-validator';
+import {Entity, PrimaryGeneratedColumn, Column, BeforeInsert, JoinTable, OneToMany} from "typeorm";
+import { IsEmail } from 'class-validator';
 import * as crypto from 'crypto';
 import { CompanyEntity } from "../company/company.entity";
 
