@@ -59,12 +59,9 @@ export class UserController {
   async login(@Body() dto: LoginUserDto, @Req() request: Request): Promise<UserRO> {
     // const verified = await this.userService.googleReCaptcha(request);
     // Errors.inputNotValid(!verified, { captcha: 'Captcha not valid' });
-    const _user = await this.userService.findOne(dto);
+    const user = await this.userService.findOne(dto);
 
-    Errors.notAuthorized(!!_user, { user: 'User not authorized'});
-
-    const token = await jwt.generateJWT(_user);
-    const user = { ..._user, token };
-    return { user };
+    Errors.notAuthorized(!!user, { user: 'User not authorized'});
+    return user;
   }
 }

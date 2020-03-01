@@ -29,14 +29,15 @@ export class UserService {
     return await this.userRepository.find();
   }
 
-  async findOne(loginUserDto: LoginUserDto): Promise<UserEntity> {
+  async findOne(loginUserDto: LoginUserDto): Promise<UserRO> {
     const { email, password } = loginUserDto.user;
     const findOneOptions = {
       email: email,
       password: crypto.createHmac('sha256', password).digest('hex'),
     };
 
-    return await this.userRepository.findOne(findOneOptions);
+    const user = await this.userRepository.findOne(findOneOptions)
+    return this.buildUserRO(user);
   }
 
   async create(dto: CreateUserDto): Promise<UserRO> {
