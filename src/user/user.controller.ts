@@ -34,8 +34,7 @@ export class UserController {
 
   @ApiOperation({ summary: "Create user and company" })
   @ApiResponse({ status: 201, type: UserRegisterRO, description: "User and company creation successful!" })
-  @ApiResponse({ status: 400, type: IErrors, description: "Email must be unique" })
-  @ApiResponse({ status: 400, type: IErrors, description: "Company already exists" })
+  @ApiResponse({ status: 400, type: IErrors, description: "Email and/or company already exists" })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
   @Post('/register')

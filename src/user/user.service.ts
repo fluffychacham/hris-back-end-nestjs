@@ -44,7 +44,7 @@ export class UserService {
 
     const user = await qb.getOne();
 
-    Errors.inputNotValid(!!user, { email: "Email must be unique." });
+    Errors.inputNotValid(!!user, { email: "Email already exists" });
 
     // create new user
     let newUser = new UserEntity();
@@ -53,7 +53,7 @@ export class UserService {
     newUser.companies = [];
 
     const user_error = await validate(newUser);
-    Errors.inputNotValid(user_error.length > 0, { email: "Userinput is not valid." })
+    Errors.inputNotValid(user_error.length > 0, { email: "User input is not valid." })
 
     const savedUser = await this.userRepository.save(newUser);
     return this.buildUserRO(savedUser);

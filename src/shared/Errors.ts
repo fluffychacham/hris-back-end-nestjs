@@ -1,11 +1,18 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
+import { ApiProperty } from "@nestjs/swagger";
 
-export class IErrors {
-    error: {
-        name: string,
-        message: Object
-    }
+class IErrorsObject {
+    @ApiProperty()
+    name: string;
+    
+    @ApiProperty()
+    message: Object;
 }
+export class IErrors {
+    @ApiProperty()
+    error: IErrorsObject;
+}
+
 class Errors {
     private datas: boolean[] = [];
     private messages: Object[] = [];
