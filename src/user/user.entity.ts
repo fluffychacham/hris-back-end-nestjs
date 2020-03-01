@@ -1,6 +1,7 @@
 import {Entity, PrimaryGeneratedColumn, Column, BeforeInsert, JoinTable, OneToMany} from "typeorm";
-import { IsEmail } from 'class-validator';
+import { IsEmail, MinLength, MaxLength } from 'class-validator';
 import * as crypto from 'crypto';
+
 import { CompanyEntity } from "../company/company.entity";
 
 @Entity('user')
@@ -9,8 +10,8 @@ export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
+  // @IsEmail()
   @Column()
-  @IsEmail()
   email: string;
 
   @Column({default: 'owner'})
@@ -22,6 +23,8 @@ export class UserEntity {
   @Column({default: ''})
   image: string;
 
+  @MinLength(8)
+  @MaxLength(20)
   @Column()
   password: string;
 

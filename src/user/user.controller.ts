@@ -1,17 +1,18 @@
-import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes, Inject, forwardRef, Req } from "@nestjs/common";
-import { UserService } from "./user.service";
-import { UserRO, UserRegisterRO } from "./user.interface";
-import { CreateUserDto, UpdateUserDto, LoginUserDto } from "./dto";
-import { HttpException } from "@nestjs/common/exceptions/http.exception";
-import { User } from "./user.decorator";
-import { ValidationPipe } from "../shared/pipes/validation.pipe";
-
+import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes, Req } from "@nestjs/common";
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from "@nestjs/swagger";
-
-import * as jwt from '../shared/jwt';
-import { UserEntity } from "./user.entity";
-import Errors, { IErrors } from "../shared/Errors";
 import { Request } from 'express';
+
+import { ValidationPipe } from "../shared/pipes/validation.pipe";
+import Errors, { IErrors } from "../shared/Errors";
+import * as jwt from '../shared/jwt';
+
+import { CreateUserDto, UpdateUserDto, LoginUserDto } from "./dto";
+
+import { UserRO, UserRegisterRO } from "./user.interface";
+import { UserService } from "./user.service";
+import { UserEntity } from "./user.entity";
+import { User } from "./user.decorator";
+
 
 @ApiBearerAuth()
 @ApiTags('user')

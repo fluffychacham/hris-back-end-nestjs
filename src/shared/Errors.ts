@@ -52,6 +52,7 @@ class Errors {
         this.datas.map((d, i) => {
             if(d) message = {...message, ...this.messages[i]}
         })
+        if(Object.entries(message).length === 0) return;
         switch(this.status){
             case HttpStatus.BAD_REQUEST:
                 Errors.inputNotValid(true, message);

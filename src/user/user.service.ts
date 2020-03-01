@@ -1,17 +1,19 @@
-import { Injectable, HttpService } from '@nestjs/common';
+import { Injectable, HttpService, HttpStatus } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getRepository, DeleteResult } from 'typeorm';
-import { UserEntity } from './user.entity';
-import {CreateUserDto, LoginUserDto, UpdateUserDto} from './dto';
-import { UserRO } from './user.interface';
 import { validate } from 'class-validator';
-import { HttpStatus } from '@nestjs/common';
-import * as jwt from '../shared/jwt';
-import * as crypto from 'crypto';
-import { CompanyEntity } from '../company/company.entity';
-import Errors from '../shared/Errors';
-import { GOOGLE_CAPTCHA_SECRET } from '../config';
 import { Request } from 'express';
+import * as crypto from 'crypto';
+
+import { CompanyEntity } from '../company/company.entity';
+
+import { CreateUserDto, LoginUserDto, UpdateUserDto } from "./dto";
+import { GOOGLE_CAPTCHA_SECRET } from '../config';
+import { UserEntity } from './user.entity';
+import { UserRO } from './user.interface';
+import Errors from '../shared/Errors';
+import * as jwt from '../shared/jwt';
 
 @Injectable()
 export class UserService {
@@ -102,7 +104,15 @@ export class UserService {
     const company_error = await validate(newCompany);
 
     const dataInvalidError = new Errors(HttpStatus.BAD_REQUEST);
-    dataInvalidError.pushErrorMessage(user_error.length > 0, { email: "User input not valid" })
+    if(user_error.length > 0) {
+      user_error.map(u => {
+        dataInvalidError.pushErrorMessage(u.property === "email", { email: 'Email is not valid' });
+        const password_constraints = u.constraints.minLength || u.constraints.maxLength || "";
+        dataInvalidError.pushErrorMessage(u.property === "password", {
+            password: password_constraints.charAt(0).toUpperCase() + password_constraints.slice(1)
+        });
+      });
+    }
     dataInvalidError.pushErrorMessage(company_error.length > 0, { company: "Company is not valid" })
     dataInvalidError.showErrorMessages();
 
