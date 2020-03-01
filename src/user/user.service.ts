@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getRepository, DeleteResult } from 'typeorm';
 import { UserEntity } from './user.entity';
@@ -10,6 +10,8 @@ import * as jwt from '../shared/jwt';
 import * as crypto from 'crypto';
 import { CompanyEntity } from '../company/company.entity';
 import Errors from '../shared/Errors';
+import { GOOGLE_CAPTCHA_SECRET } from '../config';
+import { Request } from 'express';
 
 @Injectable()
 export class UserService {
@@ -17,7 +19,8 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(CompanyEntity)
-    private readonly companyRepository: Repository<CompanyEntity>
+    private readonly companyRepository: Repository<CompanyEntity>,
+    private readonly httpService: HttpService
   ) {}
 
   async findAll(): Promise<UserEntity[]> {
@@ -156,6 +159,19 @@ export class UserService {
     };
 
     return { user: userRO };
+  }
+
+  async googleReCaptcha(request: Request): Promise<boolean> {
+    const google_captcha_url = 'https://www.google.com/recaptcha/api';
+    const site_verify_url = '/siteverify?secret=' + GOOGLE_CAPTCHA_SECRET;
+    const captcha_response = '&response=' + request.body['g-recaptcha-response'];
+    const remote_ip = '&remoteip=' + request.connection.remoteAddress;
+
+    const verify_url = google_captcha_url + site_verify_url + captcha_response + remote_ip;
+
+    const response = await this.httpService.get(verify_url).toPromise();
+    if(response && response.data) return response.data.success;
+    return false;
   }
 
   private buildUserAndCompanyRO(user: UserEntity, company: CompanyEntity) {

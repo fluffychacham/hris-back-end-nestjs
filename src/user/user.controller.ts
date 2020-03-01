@@ -1,4 +1,4 @@
-import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes, Inject, forwardRef } from "@nestjs/common";
+import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes, Inject, forwardRef, Req } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { UserRO, UserRegisterRO } from "./user.interface";
 import { CreateUserDto, UpdateUserDto, LoginUserDto } from "./dto";
@@ -10,7 +10,8 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from "@nestjs/swagg
 
 import * as jwt from '../shared/jwt';
 import { UserEntity } from "./user.entity";
-import { IErrors } from "../shared/Errors";
+import Errors, { IErrors } from "../shared/Errors";
+import { Request } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('user')
@@ -50,14 +51,16 @@ export class UserController {
   }
 
   @ApiOperation({ summary: "Login user" })
+  @ApiResponse({ status: 401, description: 'User not authorized' })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
   @Post('/login')
-  async login(@Body() dto: LoginUserDto): Promise<UserRO> {
+  async login(@Body() dto: LoginUserDto, @Req() request: Request): Promise<UserRO> {
+    // const verified = await this.userService.googleReCaptcha(request);
+    // Errors.inputNotValid(!verified, { captcha: 'Captcha not valid' });
     const _user = await this.userService.findOne(dto);
 
-    const errors = { User: " not found" };
-    if (!_user) throw new HttpException({ errors }, 401);
+    Errors.notAuthorized(!!_user, { user: 'User not authorized'});
 
     const token = await jwt.generateJWT(_user);
     const { id, email, bio, image } = _user;

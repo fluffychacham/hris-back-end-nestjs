@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule, RequestMethod, HttpService, HttpModule } from "@nestjs/common";
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { UserController } from './user.controller';
@@ -10,7 +10,7 @@ import { CompanyModule } from "../company/company.module";
 import { CompanyEntity } from "../company/company.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity]), CompanyModule],
+  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity]), CompanyModule, HttpModule],
   providers: [UserService],
   controllers: [
     UserController
