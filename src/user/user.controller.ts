@@ -64,8 +64,7 @@ export class UserController {
     Errors.notAuthorized(!!_user, { user: 'User not authorized'});
 
     const token = await jwt.generateJWT(_user);
-    const { id, email, bio, image } = _user;
-    const user = { id, email, token, bio, image };
+    const user = { ..._user, token };
     return { user };
   }
 }

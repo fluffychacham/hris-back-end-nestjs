@@ -16,6 +16,9 @@ export class UserData {
 
   @ApiProperty()
   image?: string;
+
+  @ApiProperty()
+  role: string;
 }
 
 export class UserRO {

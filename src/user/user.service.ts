@@ -80,9 +80,6 @@ export class UserService {
     const user = await qb_user.getOne();
     const company = await qb_company.getOne();
 
-    // Errors.inputNotValid(!!user, { email: "Email already exists" });
-    // Errors.inputNotValid(!!company, { company: "Company already exists" });
-
     const dataExistsInputError = new Errors(HttpStatus.BAD_REQUEST);
     dataExistsInputError.pushErrorMessage(!!user, { email: "Email already exists" });
     dataExistsInputError.pushErrorMessage(!!company, { company: "Company already exists" });
@@ -159,18 +156,6 @@ export class UserService {
     return this.buildUserRO(user);
   }
 
-  private buildUserRO(user: UserEntity) {
-    const userRO = {
-      id: user.id,
-      email: user.email,
-      bio: user.bio,
-      token: jwt.generateJWT(user),
-      image: user.image
-    };
-
-    return { user: userRO };
-  }
-
   async googleReCaptcha(request: Request): Promise<boolean> {
     const google_captcha_url = 'https://www.google.com/recaptcha/api';
     const site_verify_url = '/siteverify?secret=' + GOOGLE_CAPTCHA_SECRET;
@@ -184,13 +169,27 @@ export class UserService {
     return false;
   }
 
+  private buildUserRO(user: UserEntity) {
+    const userRO = {
+      id: user.id,
+      email: user.email,
+      bio: user.bio,
+      token: jwt.generateJWT(user),
+      image: user.image,
+      role: user.role
+    };
+
+    return { user: userRO };
+  }
+
   private buildUserAndCompanyRO(user: UserEntity, company: CompanyEntity) {
     const userRO = {
       id: user.id,
       email: user.email,
       bio: user.bio,
       token: jwt.generateJWT(user),
-      image: user.image
+      image: user.image,
+      role: user.role
     }
     const companyRO = {
       id: company.id,
