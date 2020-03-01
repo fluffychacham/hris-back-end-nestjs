@@ -10,6 +10,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from "@nestjs/swagg
 
 import * as jwt from '../shared/jwt';
 import { UserEntity } from "./user.entity";
+import { IErrors } from "../shared/Errors";
 
 @ApiBearerAuth()
 @ApiTags('user')
@@ -33,8 +34,8 @@ export class UserController {
 
   @ApiOperation({ summary: "Create user and company" })
   @ApiResponse({ status: 201, type: UserRegisterRO, description: "User and company creation successful!" })
-  @ApiResponse({ status: 400, type: UserRegisterRO, description: "Email must be unique" })
-  @ApiResponse({ status: 400, type: UserRegisterRO, description: "Company already exists" })
+  @ApiResponse({ status: 400, type: IErrors, description: "Email must be unique" })
+  @ApiResponse({ status: 400, type: IErrors, description: "Company already exists" })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
   @Post('/register')

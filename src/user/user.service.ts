@@ -5,7 +5,6 @@ import { UserEntity } from './user.entity';
 import {CreateUserDto, LoginUserDto, UpdateUserDto} from './dto';
 import { UserRO } from './user.interface';
 import { validate } from 'class-validator';
-import { HttpException } from '@nestjs/common/exceptions/http.exception';
 import { HttpStatus } from '@nestjs/common';
 import * as jwt from '../shared/jwt';
 import * as crypto from 'crypto';
@@ -45,10 +44,7 @@ export class UserService {
 
     const user = await qb.getOne();
 
-    if (user) {
-      const errors = { email: "Email must be unique." };
-      throw new HttpException({message: 'Input data validation failed', errors}, HttpStatus.BAD_REQUEST);
-    }
+    Errors.inputNotValid(!!user, { email: "Email must be unique." });
 
     // create new user
     let newUser = new UserEntity();
@@ -56,15 +52,11 @@ export class UserService {
     newUser.password = password;
     newUser.companies = [];
 
-    const _errors = await validate(newUser);
-    if (_errors.length > 0) {
-      const errors = { email: "Userinput is not valid." };
-      throw new HttpException({ message: "Input data validation failed", errors }, HttpStatus.BAD_REQUEST);
+    const user_error = await validate(newUser);
+    Errors.inputNotValid(user_error.length > 0, { email: "Userinput is not valid." })
 
-    } else {
-      const savedUser = await this.userRepository.save(newUser);
-      return this.buildUserRO(savedUser);
-    }
+    const savedUser = await this.userRepository.save(newUser);
+    return this.buildUserRO(savedUser);
 
   }
 
@@ -83,8 +75,13 @@ export class UserService {
     const user = await qb_user.getOne();
     const company = await qb_company.getOne();
 
-    Errors.inputNotValid(!!user, { email: "Email must be unique." });
-    Errors.inputNotValid(!!company, { company: "Company already exists" });
+    // Errors.inputNotValid(!!user, { email: "Email already exists" });
+    // Errors.inputNotValid(!!company, { company: "Company already exists" });
+
+    const dataExistsInputError = new Errors(HttpStatus.BAD_REQUEST);
+    dataExistsInputError.pushErrorMessage(!!user, { email: "Email already exists" });
+    dataExistsInputError.pushErrorMessage(!!company, { company: "Company already exists" });
+    dataExistsInputError.showErrorMessages();
 
     // create new user
     let newUser = new UserEntity();
@@ -100,10 +97,12 @@ export class UserService {
 
     const user_error = await validate(newUser);
     const company_error = await validate(newCompany);
-    
-    Errors.inputNotValid(user_error.length > 0, { email: "User input not valid" });
-    Errors.inputNotValid(company_error.length > 0, { company: "Company is not valid" });
-    
+
+    const dataInvalidError = new Errors(HttpStatus.BAD_REQUEST);
+    dataInvalidError.pushErrorMessage(user_error.length > 0, { email: "User input not valid" })
+    dataInvalidError.pushErrorMessage(company_error.length > 0, { company: "Company is not valid" })
+    dataInvalidError.showErrorMessages();
+
     const savedUser = await this.userRepository.save(newUser);
     const owner = await this.userRepository.findOne({ where: { id: savedUser.id }, relations: ["companies"] });
     const savedCompany = await this.companyRepository.save(newCompany);
