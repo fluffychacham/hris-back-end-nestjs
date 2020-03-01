@@ -11,9 +11,10 @@ import { CompanyEntity } from '../company/company.entity';
 import { CreateUserDto, LoginUserDto, UpdateUserDto } from "./dto";
 import { GOOGLE_CAPTCHA_SECRET } from '../config';
 import { UserEntity } from './user.entity';
-import { UserRO } from './user.interface';
+import { UserRO, UserRegisterRO } from './user.interface';
 import Errors from '../shared/Errors';
 import * as jwt from '../shared/jwt';
+import { CompanyData } from '../company/company.interface';
 
 @Injectable()
 export class UserService {
@@ -111,7 +112,15 @@ export class UserService {
         });
       });
     }
-    dataInvalidError.pushErrorMessage(company_error.length > 0, { company: "Company is not valid" })
+    if(company_error.length > 0) {
+      company_error.map(c => {
+        const name_constraints = c.constraints.minLength || c.constraints.maxLength || "";
+        dataInvalidError.pushErrorMessage(c.property === "name", {
+            company_name: name_constraints.charAt(0).toUpperCase() + name_constraints.slice(1)
+        });
+        dataInvalidError.pushErrorMessage(c.property === "domain", { company_domain: 'Domain not valid' })
+      })
+    }
     dataInvalidError.showErrorMessages();
 
     const savedUser = await this.userRepository.save(newUser);
@@ -170,37 +179,29 @@ export class UserService {
     return false;
   }
 
-  private buildUserRO(user: UserEntity) {
-    const userRO = {
-      id: user.id,
-      email: user.email,
-      bio: user.bio,
-      token: jwt.generateJWT(user),
-      image: user.image,
-      role: user.role
-    };
-
-    return { user: userRO };
+  private buildUserRO(u: UserEntity): UserRO {
+    return {
+      user: {
+        id: u.id,
+        email: u.email,
+        bio: u.bio,
+        token: jwt.generateJWT(u),
+        image: u.image,
+        role: u.role
+      }
+    } 
   }
 
-  private buildUserAndCompanyRO(user: UserEntity, company: CompanyEntity) {
-    const userRO = {
-      id: user.id,
-      email: user.email,
-      bio: user.bio,
-      token: jwt.generateJWT(user),
-      image: user.image,
-      role: user.role
+  private buildUserAndCompanyRO(u: UserEntity, c: CompanyEntity): UserRegisterRO {
+    const { user } = this.buildUserRO(u);
+    const companyRO: CompanyData = {
+      id: c.id,
+      name: c.name,
+      domain: c.domain,
+      description: c.description,
+      created: c.created,
+      updated: c.updated
     }
-    const companyRO = {
-      id: company.id,
-      name: company.name,
-      domain: company.domain,
-      description: company.description,
-      created: company.created,
-      updated: company.updated
-    }
-
-    return { user: userRO, company: companyRO }
+    return { user, company: companyRO }
   }
 }

@@ -11,6 +11,9 @@ export class CompanyData {
     description: string;
 
     @ApiProperty()
+    domain: string;
+
+    @ApiProperty()
     created: Date;
     
     @ApiProperty()
