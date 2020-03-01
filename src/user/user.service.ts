@@ -11,7 +11,7 @@ import { CompanyEntity } from '../company/company.entity';
 import { CreateUserDto, LoginUserDto, UpdateUserDto } from "./dto";
 import { GOOGLE_CAPTCHA_SECRET } from '../config';
 import { UserEntity } from './user.entity';
-import { UserRO, UserRegisterRO } from './user.interface';
+import { UserRO, UserCompanyRO } from './user.interface';
 import Errors from '../shared/Errors';
 import * as jwt from '../shared/jwt';
 import { CompanyData } from '../company/company.interface';
@@ -30,15 +30,19 @@ export class UserService {
     return await this.userRepository.find();
   }
 
-  async findOne(loginUserDto: LoginUserDto): Promise<UserRO> {
+  async findUserAndCompany(loginUserDto: LoginUserDto): Promise<UserCompanyRO> {
+    // Check and get user
     const { email, password } = loginUserDto.user;
-    const findOneOptions = {
-      email: email,
-      password: crypto.createHmac('sha256', password).digest('hex'),
-    };
+    const user = await this.userRepository.findOne({
+      email,
+      password: crypto.createHmac('sha256', password).digest('hex')
+    });
+    Errors.notAuthorized(!!user, { user: 'User not authorized'});
+    // Check and get company
+    const company = await this.companyRepository.findOne({ owner: { id: user.id } });
+    Errors.notFound(!!company, { company: 'Company not found' });
 
-    const user = await this.userRepository.findOne(findOneOptions)
-    return this.buildUserRO(user);
+    return this.buildUserAndCompanyRO(user, company);
   }
 
   async create(dto: CreateUserDto): Promise<UserRO> {
@@ -192,7 +196,7 @@ export class UserService {
     } 
   }
 
-  private buildUserAndCompanyRO(u: UserEntity, c: CompanyEntity): UserRegisterRO {
+  private buildUserAndCompanyRO(u: UserEntity, c: CompanyEntity): UserCompanyRO {
     const { user } = this.buildUserRO(u);
     const companyRO: CompanyData = {
       id: c.id,

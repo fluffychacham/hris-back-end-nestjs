@@ -8,7 +8,7 @@ import * as jwt from '../shared/jwt';
 
 import { CreateUserDto, UpdateUserDto, LoginUserDto } from "./dto";
 
-import { UserRO, UserRegisterRO } from "./user.interface";
+import { UserRO, UserCompanyRO } from "./user.interface";
 import { UserService } from "./user.service";
 import { UserEntity } from "./user.entity";
 import { User } from "./user.decorator";
@@ -35,12 +35,12 @@ export class UserController {
   }
 
   @ApiOperation({ summary: "Create user and company" })
-  @ApiResponse({ status: 201, type: UserRegisterRO, description: "User and company creation successful!" })
+  @ApiResponse({ status: 201, type: UserCompanyRO, description: "User and company creation successful!" })
   @ApiResponse({ status: 400, type: IErrors, description: "Email and/or company already exists" })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
   @Post('/register')
-  async create(@Body() dto: CreateUserDto): Promise<UserRegisterRO>  {
+  async create(@Body() dto: CreateUserDto): Promise<UserCompanyRO>  {
     return this.userService.createUserAndCompany(dto);
   }
 
@@ -56,12 +56,9 @@ export class UserController {
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
   @Post('/login')
-  async login(@Body() dto: LoginUserDto, @Req() request: Request): Promise<UserRO> {
+  async login(@Body() dto: LoginUserDto, @Req() request: Request): Promise<UserCompanyRO> {
     // const verified = await this.userService.googleReCaptcha(request);
     // Errors.inputNotValid(!verified, { captcha: 'Captcha not valid' });
-    const user = await this.userService.findOne(dto);
-
-    Errors.notAuthorized(!!user, { user: 'User not authorized'});
-    return user;
+    return this.userService.findUserAndCompany(dto);
   }
 }

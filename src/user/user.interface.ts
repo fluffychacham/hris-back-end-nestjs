@@ -26,7 +26,7 @@ export class UserRO {
     user: UserData;
 }
 
-export class UserRegisterRO {
+export class UserCompanyRO {
   @ApiProperty()
   user: UserData;
   
