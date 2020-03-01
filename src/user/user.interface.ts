@@ -1,6 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { CompanyData } from "../company/company.interface";
 
 export class UserData {
+  @ApiProperty()
+  id: number;
+
   @ApiProperty()
   email: string;
 
@@ -17,4 +21,12 @@ export class UserData {
 export class UserRO {
     @ApiProperty()
     user: UserData;
+}
+
+export class UserRegisterRO {
+  @ApiProperty()
+  user: UserData;
+  
+  @ApiProperty()
+  company: CompanyData;
 }

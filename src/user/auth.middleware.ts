@@ -28,6 +28,7 @@ export class AuthMiddleware implements NestMiddleware {
             next();
         } else {
             Errors.notAuthorized(true, { user: "User not authorized" });
+            next();
         }
     }
 }

@@ -6,9 +6,11 @@ import { UserEntity } from './user.entity';
 import { UserService } from './user.service';
 
 import { AuthMiddleware } from './auth.middleware';
+import { CompanyModule } from "../company/company.module";
+import { CompanyEntity } from "../company/company.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity])],
+  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity]), CompanyModule],
   providers: [UserService],
   controllers: [
     UserController

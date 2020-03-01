@@ -9,12 +9,16 @@ import { HttpException } from '@nestjs/common/exceptions/http.exception';
 import { HttpStatus } from '@nestjs/common';
 import * as jwt from '../shared/jwt';
 import * as crypto from 'crypto';
+import { CompanyEntity } from '../company/company.entity';
+import Errors from '../shared/Errors';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>
+    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(CompanyEntity)
+    private readonly companyRepository: Repository<CompanyEntity>
   ) {}
 
   async findAll(): Promise<UserEntity[]> {
@@ -44,7 +48,6 @@ export class UserService {
     if (user) {
       const errors = { email: "Email must be unique." };
       throw new HttpException({message: 'Input data validation failed', errors}, HttpStatus.BAD_REQUEST);
-
     }
 
     // create new user
@@ -53,10 +56,10 @@ export class UserService {
     newUser.password = password;
     newUser.companies = [];
 
-    const errors = await validate(newUser);
-    if (errors.length > 0) {
-      const _errors = { email: "Userinput is not valid." };
-      throw new HttpException({ message: "Input data validation failed", _errors }, HttpStatus.BAD_REQUEST);
+    const _errors = await validate(newUser);
+    if (_errors.length > 0) {
+      const errors = { email: "Userinput is not valid." };
+      throw new HttpException({ message: "Input data validation failed", errors }, HttpStatus.BAD_REQUEST);
 
     } else {
       const savedUser = await this.userRepository.save(newUser);
@@ -65,8 +68,61 @@ export class UserService {
 
   }
 
+  async createUserAndCompany(dto: CreateUserDto) {
+    const { email, password } = dto.user;
+    const { name, description, domain } = dto.company;
+
+    // check uniqueness of username/email & company name
+    const qb_user = await getRepository(UserEntity)
+      .createQueryBuilder('user')
+      .orWhere('user.email = :email', { email });
+    const qb_company = await getRepository(CompanyEntity)
+      .createQueryBuilder("company")
+      .where("company.name = :name", { name });
+
+    const user = await qb_user.getOne();
+    const company = await qb_company.getOne();
+
+    Errors.inputNotValid(!!user, { email: "Email must be unique." });
+    Errors.inputNotValid(!!company, { company: "Company already exists" });
+
+    // create new user
+    let newUser = new UserEntity();
+    newUser.email = email;
+    newUser.password = password;
+    newUser.companies = [];
+
+    // create new company
+    let newCompany = new CompanyEntity();
+    newCompany.name = name;
+    newCompany.description = description;
+    newCompany.domain = domain;
+
+    const user_error = await validate(newUser);
+    const company_error = await validate(newCompany);
+    
+    Errors.inputNotValid(user_error.length > 0, { email: "User input not valid" });
+    Errors.inputNotValid(company_error.length > 0, { company: "Company is not valid" });
+    
+    const savedUser = await this.userRepository.save(newUser);
+    const owner = await this.userRepository.findOne({ where: { id: savedUser.id }, relations: ["companies"] });
+    const savedCompany = await this.companyRepository.save(newCompany);
+    if (Array.isArray(owner.companies)) {
+        owner.companies.push(newCompany);
+    } else {
+        owner.companies = [newCompany];
+    }
+    await this.userRepository.save(owner);
+
+    return this.buildUserAndCompanyRO(savedUser, savedCompany);
+
+  }
+
   async update(id: number, dto: UpdateUserDto): Promise<UserEntity> {
     let toUpdate = await this.userRepository.findOne(id);
+    
+    Errors.notFound(!!!toUpdate, { user: 'User not found' });
+
     delete toUpdate.password;
 
     let updated = Object.assign(toUpdate, dto.user);
@@ -80,21 +136,20 @@ export class UserService {
   async findById(id: number): Promise<UserRO>{
     const user = await this.userRepository.findOne(id);
 
-    if (!user) {
-      const errors = {User: ' not found'};
-      throw new HttpException({errors}, 401);
-    };
+    Errors.notFound(!!user, { user: 'User not found' });
 
     return this.buildUserRO(user);
   }
 
   async findByEmail(email: string): Promise<UserRO>{
-    const user = await this.userRepository.findOne({email: email});
+    const user = await this.userRepository.findOne({ email: email });
+    Errors.notFound(!!user, { user: 'User not found' })
     return this.buildUserRO(user);
   }
 
   private buildUserRO(user: UserEntity) {
     const userRO = {
+      id: user.id,
       email: user.email,
       bio: user.bio,
       token: jwt.generateJWT(user),
@@ -102,5 +157,25 @@ export class UserService {
     };
 
     return { user: userRO };
+  }
+
+  private buildUserAndCompanyRO(user: UserEntity, company: CompanyEntity) {
+    const userRO = {
+      id: user.id,
+      email: user.email,
+      bio: user.bio,
+      token: jwt.generateJWT(user),
+      image: user.image
+    }
+    const companyRO = {
+      id: company.id,
+      name: company.name,
+      domain: company.domain,
+      description: company.description,
+      created: company.created,
+      updated: company.updated
+    }
+
+    return { user: userRO, company: companyRO }
   }
 }

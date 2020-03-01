@@ -1,14 +1,15 @@
-import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes } from "@nestjs/common";
+import { Get, Post, Body, Put, Delete, Param, Controller, UsePipes, Inject, forwardRef } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { UserRO } from "./user.interface";
+import { UserRO, UserRegisterRO } from "./user.interface";
 import { CreateUserDto, UpdateUserDto, LoginUserDto } from "./dto";
 import { HttpException } from "@nestjs/common/exceptions/http.exception";
 import { User } from "./user.decorator";
 import { ValidationPipe } from "../shared/pipes/validation.pipe";
 
-import { ApiTags, ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from "@nestjs/swagger";
 
 import * as jwt from '../shared/jwt';
+import { UserEntity } from "./user.entity";
 
 @ApiBearerAuth()
 @ApiTags('user')
@@ -17,31 +18,39 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @ApiOperation({ summary: "Get user" })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
   @Get('/')
   async findMe(@User('email') email: string): Promise<UserRO> {
     return await this.userService.findByEmail(email);
   }
 
   @ApiOperation({ summary: "Update user" })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
   @Put('/')
-  async update(@User('id') userId: number, @Body() dto: UpdateUserDto) {
+  async update(@User('id') userId: number, @Body() dto: UpdateUserDto): Promise<UserEntity>  {
     return await this.userService.update(userId, dto);
   }
 
-  @ApiOperation({ summary: "Create user" })
+  @ApiOperation({ summary: "Create user and company" })
+  @ApiResponse({ status: 201, type: UserRegisterRO, description: "User and company creation successful!" })
+  @ApiResponse({ status: 400, type: UserRegisterRO, description: "Email must be unique" })
+  @ApiResponse({ status: 400, type: UserRegisterRO, description: "Company already exists" })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
   @Post('/register')
-  async create(@Body() dto: CreateUserDto) {
-    return this.userService.create(dto);
+  async create(@Body() dto: CreateUserDto): Promise<UserRegisterRO>  {
+    return this.userService.createUserAndCompany(dto);
   }
 
   @ApiOperation({ summary: "Delete user" })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
   @Delete('/:id')
   async delete(@Param("id") id) {
     return await this.userService.delete(id);
   }
 
   @ApiOperation({ summary: "Login user" })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
   @Post('/login')
   async login(@Body() dto: LoginUserDto): Promise<UserRO> {
@@ -51,8 +60,8 @@ export class UserController {
     if (!_user) throw new HttpException({ errors }, 401);
 
     const token = await jwt.generateJWT(_user);
-    const { email, bio, image } = _user;
-    const user = { email, token, bio, image };
+    const { id, email, bio, image } = _user;
+    const user = { id, email, token, bio, image };
     return { user };
   }
 }

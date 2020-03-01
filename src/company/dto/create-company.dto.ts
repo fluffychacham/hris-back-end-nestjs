@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
-class CreateCompanyData {
+export class CreateCompanyData {
     @ApiProperty()
     name: string;
 
@@ -13,5 +13,5 @@ class CreateCompanyData {
 
 export class CreateCompanyDto {
     @ApiProperty()
-    readonly company: CreateCompanyData;
+    company: CreateCompanyData;
 }
