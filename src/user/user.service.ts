@@ -105,7 +105,7 @@ export class UserService {
     const dataInvalidError = new Errors(HttpStatus.BAD_REQUEST);
     if(user_error.length > 0) {
       user_error.map(u => {
-        dataInvalidError.pushErrorMessage(u.property === "email", { email: 'Email is not valid' });
+        dataInvalidError.pushErrorMessage(u.property === "email", { email: u.constraints.emailValidator });
         const password_constraints = u.constraints.minLength || u.constraints.maxLength || "";
         dataInvalidError.pushErrorMessage(u.property === "password", {
             password: password_constraints.charAt(0).toUpperCase() + password_constraints.slice(1)
