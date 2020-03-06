@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, JoinTable, OneToMany } from "typeorm";
-import { MinLength, MaxLength } from 'class-validator';
+import { MinLength, MaxLength, Max } from 'class-validator';
 import * as crypto from 'crypto';
 
 import { CompanyEntity } from "../company/company.entity";
@@ -14,6 +14,14 @@ export class UserEntity {
   @IsEmailValid()
   @Column()
   email: string;
+
+  @MaxLength(20)
+  @Column({default: ''})
+  firstName: string;
+
+  @MaxLength(20)
+  @Column({default: ''})
+  lastName: string;
 
   @Column({default: 'owner'})
   role: string;
