@@ -6,10 +6,10 @@ export class UpdateUserData {
   readonly email: string;
 
   @ApiProperty()
-  readonly firstName: string;
+  readonly first_name: string;
 
   @ApiProperty()
-  readonly lastName: string;
+  readonly last_name: string;
  
   @ApiProperty()
   readonly bio: string;

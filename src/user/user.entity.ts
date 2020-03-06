@@ -17,11 +17,11 @@ export class UserEntity {
 
   @MaxLength(20)
   @Column({default: ''})
-  firstName: string;
+  first_name: string;
 
   @MaxLength(20)
   @Column({default: ''})
-  lastName: string;
+  last_name: string;
 
   @Column({default: 'owner'})
   role: string;

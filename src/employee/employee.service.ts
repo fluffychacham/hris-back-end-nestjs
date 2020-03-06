@@ -17,16 +17,20 @@ import { stringify } from 'querystring';
 import { validate } from "class-validator";
 
 import Errors from "../shared/Errors";
+import { UserEntity } from '../user/user.entity';
 
 export class EmployeeService {
     constructor(
         @InjectRepository(EmployeeEntity)
         private readonly employeeRespository: Repository<EmployeeEntity>,
         @InjectRepository(CompanyEntity)
-        private readonly companyRepository: Repository<CompanyEntity>
+        private readonly companyRepository: Repository<CompanyEntity>,
+        @InjectRepository(UserEntity)
+        private readonly userRespository: Repository<UserEntity>
     ) {}
 
     private company: CompanyEntity;
+    private user: UserEntity;
 
     async findByEmail(email: string): Promise<EmployeeRO> {
         const employee = await this.employeeRespository
@@ -73,18 +77,31 @@ export class EmployeeService {
             day_to_review
         } = dto.employee;
 
-        const employee = await getRepository(EmployeeEntity)
+        const employee = await this.employeeRespository
             .createQueryBuilder("employee")
             .where("employee.first_name = :first_name", { first_name })
             .andWhere("employee.last_name = :last_name", { last_name })
             .getOne();
+        
+        if(reports_to !== undefined) {
+            this.user = await this.userRespository
+                .createQueryBuilder('user')
+                .where('user.id = :id', { id: reports_to })
+                .getOne()
+        } else {
+            this.user = await this.userRespository
+                .createQueryBuilder('user')
+                .where('user.id = :userId', { userId })
+                .getOne();
+        }
 
         Errors.inputNotValid(!!employee, { employee: "Employee not valid" });
+        Errors.inputNotValid(!!this.user, { employee: "Reports to user not valid" })
 
         let newEmployee = new EmployeeEntity();
         newEmployee.first_name = first_name;
         newEmployee.last_name = last_name;
-        newEmployee.reports_to = reports_to;
+        newEmployee.reports_to = this.user;
         newEmployee.role = role;
         newEmployee.phone_number = phone_number;
         newEmployee.vacation_days = vacation_days;
@@ -155,9 +172,13 @@ export class EmployeeService {
         const { email, password } = dto.employee;
         const findOptions = { email, password: crypto.createHmac("sha256", password).digest("hex") };
         const employee = await this.employeeRespository.findOne(findOptions);
+
+        Errors.notAuthorized(!!employee, { employee: 'Employee not authorized' });
+
         const token = jwt.generateJWT(employee);
         const company_name = employee.company.name;
-        return { employee: { ...employee, token, company_name } };
+        
+        return { employee: { ...employee, token, company_name, reports_to_user_id: employee.reports_to.id } };
     }
 
     private async authorizeUser(userId: number = 0, companyId: number = 0) {
@@ -181,7 +202,7 @@ export class EmployeeService {
             updated: employee.updated,
             role: employee.role,
             company_name: company.name,
-            reports_to: employee.reports_to,
+            reports_to_user_id: employee.reports_to.id,
             vacation_days: employee.vacation_days,
             education_funds: employee.education_funds,
             phone_number: employee.phone_number,

@@ -11,10 +11,11 @@ class CreateEmployeeData {
     readonly last_name: string;
 
     @ApiPropertyOptional()
-    readonly reports_to: string;
+    readonly reports_to: number;
 
     @ApiPropertyOptional()
     readonly role: string;
+
     @ApiPropertyOptional()
     readonly phone_number: number;
 

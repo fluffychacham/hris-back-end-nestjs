@@ -26,7 +26,7 @@ export class EmployeeData {
     company_name: string;
 
     @ApiProperty()
-    reports_to: string;
+    reports_to_user_id: number;
 
     @ApiProperty()
     vacation_days: number;

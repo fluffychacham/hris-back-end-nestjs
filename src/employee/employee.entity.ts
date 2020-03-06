@@ -1,6 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeUpdate, ManyToOne, BeforeInsert } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, BeforeUpdate, ManyToOne, BeforeInsert, OneToOne, JoinColumn } from "typeorm";
 import { CompanyEntity } from "../company/company.entity";
 import * as crypto from 'crypto';
+import { type } from "os";
+import { UserEntity } from "../user/user.entity";
 
 @Entity("employee")
 export class EmployeeEntity {
@@ -19,8 +21,9 @@ export class EmployeeEntity {
     @Column({ default: "" })
     last_name: string;
 
-    @Column({ default: "" })
-    reports_to: string;
+    @OneToOne(type => UserEntity)
+    @JoinColumn()
+    reports_to: UserEntity;
 
     @Column({ default: "employee" })
     role: string;
