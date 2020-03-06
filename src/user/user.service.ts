@@ -141,15 +141,15 @@ export class UserService {
 
   }
 
-  async update(id: number, dto: UpdateUserDto): Promise<UserEntity> {
-    let toUpdate = await this.userRepository.findOne(id);
+  async update(id: number, dto: UpdateUserDto): Promise<UserRO> {
+    const toUpdate = await this.userRepository.findOne(id);
     
     Errors.notFound(!!!toUpdate, { user: 'User not found' });
 
     delete toUpdate.password;
 
-    let updated = Object.assign(toUpdate, dto.user);
-    return await this.userRepository.save(updated);
+    const updated = await this.userRepository.save(Object.assign(toUpdate, dto.user));
+    return this.buildUserRO(updated);
   }
 
   async delete(id: number): Promise<DeleteResult> {

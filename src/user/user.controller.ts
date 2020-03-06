@@ -28,9 +28,10 @@ export class UserController {
   }
 
   @ApiOperation({ summary: "Update user" })
+  @ApiResponse({ status: 200, type: UserRO, description: "User updated" })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @Put('/')
-  async update(@User('id') userId: number, @Body() dto: UpdateUserDto): Promise<UserEntity>  {
+  async update(@User('id') userId: number, @Body() dto: UpdateUserDto): Promise<UserRO>  {
     return await this.userService.update(userId, dto);
   }
 
@@ -52,6 +53,7 @@ export class UserController {
   }
 
   @ApiOperation({ summary: "Login user" })
+  @ApiResponse({ status: 200, type: UserCompanyRO,description: 'User logged in'})
   @ApiResponse({ status: 401, description: 'User not authorized' })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
