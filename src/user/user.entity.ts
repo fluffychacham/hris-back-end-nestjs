@@ -37,10 +37,16 @@ export class UserEntity {
   @Column()
   password: string;
 
+  @Column({ default: () => "CURRENT_TIMESTAMP" })
+  password_updated: Date;
+
   @BeforeInsert()
   hashPassword() {
     this.password = crypto.createHmac('sha256', this.password).digest('hex');
   }
+
+  @Column({ default: false })
+  user_confirmed: boolean;
 
   @OneToMany(type => CompanyEntity, company => company.owner)
   @JoinTable()

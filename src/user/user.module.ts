@@ -8,9 +8,10 @@ import { UserService } from './user.service';
 import { AuthMiddleware } from './auth.middleware';
 import { CompanyModule } from "../company/company.module";
 import { CompanyEntity } from "../company/company.entity";
+import { PasswordEntity } from "./password-reset.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity]), CompanyModule, HttpModule],
+  imports: [TypeOrmModule.forFeature([UserEntity, CompanyEntity, PasswordEntity]), CompanyModule, HttpModule],
   providers: [UserService],
   controllers: [
     UserController
@@ -25,6 +26,7 @@ export class UserModule implements NestModule {
           { path: "user", method: RequestMethod.GET }, 
           { path: "user", method: RequestMethod.PUT },
           { path: "user/:id", method: RequestMethod.DELETE },
+          { path: "user/password/reset/request", method: RequestMethod.POST },
         );
   }
 }

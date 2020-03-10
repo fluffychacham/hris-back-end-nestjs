@@ -5,6 +5,7 @@ import { Repository, getRepository, DeleteResult } from 'typeorm';
 import { validate } from 'class-validator';
 import { Request } from 'express';
 import * as crypto from 'crypto';
+import { v4 as uuid } from 'uuid';
 
 import { CompanyEntity } from '../company/company.entity';
 
@@ -15,6 +16,14 @@ import { UserRO, UserCompanyRO } from './user.interface';
 import Errors from '../shared/Errors';
 import * as jwt from '../shared/jwt';
 import { CompanyData } from '../company/company.interface';
+import { PasswordResetDto } from './dto/password-reset.dto';
+import { PasswordEntity } from './password-reset.entity';
+
+export class TEMP_PasswordReset {
+  user: {
+    password_code: string;
+  }
+}
 
 @Injectable()
 export class UserService {
@@ -23,7 +32,9 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
+    @InjectRepository(PasswordEntity)
+    private readonly passwordRepository: Repository<PasswordEntity>
   ) {}
 
   async findAll(): Promise<UserEntity[]> {
@@ -164,10 +175,13 @@ export class UserService {
     return this.buildUserRO(user);
   }
 
-  async findByEmail(email: string): Promise<UserRO>{
+  async findByEmail(email: string): Promise<UserCompanyRO>{
     const user = await this.userRepository.findOne({ email: email });
-    Errors.notFound(!!user, { user: 'User not found' })
-    return this.buildUserRO(user);
+    Errors.notFound(!!user, { user: 'User not found' });
+
+    const company = await this.companyRepository.findOne({ owner: { id: user.id } })
+    Errors.notFound(!!company, { company: 'Company not found' });
+    return this.buildUserAndCompanyRO(user, company);
   }
 
   async googleReCaptcha(request: Request): Promise<boolean> {
@@ -181,6 +195,61 @@ export class UserService {
     const response = await this.httpService.get(verify_url).toPromise();
     if(response && response.data) return response.data.success;
     return false;
+  }
+
+  async passwordReset(dto: PasswordResetDto): Promise<UserCompanyRO> {
+    const { password_confirm_code, password } = dto.user;
+
+    const passwordResetRepository = await this.passwordRepository
+      .createQueryBuilder('password-reset')
+      .where('password_confirm_code = :password_confirm_code', { password_confirm_code });
+    const passwordReset = await passwordResetRepository.getOne();
+    Errors.inputNotValid(!!!passwordReset, { user: 'Password reset code not found' });
+
+    const createdPasswordReset = new Date(passwordReset.created);
+    const timeNow = new Date();
+    Errors.inputNotValid(!this.calcTimeExpiry(createdPasswordReset, timeNow), { user: 'Password reset code expired' });
+
+    const user = await this.userRepository.findOne(passwordReset.user_id);
+    Errors.notFound(!!user, { user: 'User not found'});
+
+    const _password = crypto.createHmac('sha256', password).digest('hex');
+
+    const updatedUserPassword = await this.userRepository.save(Object.assign(user, { password: _password, password_updated: new Date() }));
+    Errors.notAuthorized(!!updatedUserPassword, { user: 'User not authorized' });
+
+    const passwordDelete = await passwordResetRepository.delete().execute();
+    if(passwordDelete.affected === 0) return;
+
+    const company = await this.companyRepository.findOne({ owner: { id: user.id } });
+    Errors.notFound(!!company, { company: 'Company not found'});
+    return this.buildUserAndCompanyRO(updatedUserPassword, company);
+  }
+
+  // TODO Remove temp return object when send email is ready
+  async passwordResetRequest(email: string): Promise<TEMP_PasswordReset> {
+    const user = await this.userRepository.findOne({ email });
+    Errors.notAuthorized(!!user, { user: 'User not authorized' });
+
+    // Create password reset row
+    let newPasswordReset = new PasswordEntity()
+    newPasswordReset.user_id = user.id;
+    newPasswordReset.password_confirm_code = uuid();
+    const passwordReset = await this.passwordRepository.save(newPasswordReset);
+
+    return {
+      user: {
+        password_code: passwordReset.password_confirm_code
+      }
+    };
+  }
+
+  // If time expired, return true else, false 
+  private calcTimeExpiry(date1: Date, date2: Date): boolean {
+    const time1 = new Date(date1).getTime();
+    const time2 = new Date(date2).getTime();
+    const expiry_time = 14400000; // 4 hours
+    return (time1 + expiry_time) > time2;
   }
 
   private buildUserRO(u: UserEntity): UserRO {

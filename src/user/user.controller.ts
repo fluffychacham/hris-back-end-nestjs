@@ -9,9 +9,10 @@ import * as jwt from '../shared/jwt';
 import { CreateUserDto, UpdateUserDto, LoginUserDto } from "./dto";
 
 import { UserRO, UserCompanyRO } from "./user.interface";
-import { UserService } from "./user.service";
+import { UserService, TEMP_PasswordReset } from "./user.service";
 import { UserEntity } from "./user.entity";
 import { User } from "./user.decorator";
+import { PasswordResetDto } from "./dto/password-reset.dto";
 
 
 @ApiBearerAuth()
@@ -21,9 +22,10 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @ApiOperation({ summary: "Get user" })
+  @ApiResponse({ status: 200, type: UserCompanyRO, description: 'Get user and company info' })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @Get('/')
-  async findMe(@User('email') email: string): Promise<UserRO> {
+  async findMe(@User('email') email: string): Promise<UserCompanyRO> {
     return await this.userService.findByEmail(email);
   }
 
@@ -53,7 +55,7 @@ export class UserController {
   }
 
   @ApiOperation({ summary: "Login user" })
-  @ApiResponse({ status: 200, type: UserCompanyRO,description: 'User logged in'})
+  @ApiResponse({ status: 200, type: UserCompanyRO, description: 'User logged in'})
   @ApiResponse({ status: 401, description: 'User not authorized' })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   @UsePipes(new ValidationPipe())
@@ -62,5 +64,25 @@ export class UserController {
     // const verified = await this.userService.googleReCaptcha(request);
     // Errors.inputNotValid(!verified, { captcha: 'Captcha not valid' });
     return this.userService.findUserAndCompany(dto);
+  }
+
+  @ApiOperation({ summary: 'Password reset' })
+  @ApiResponse({ status: 201, description: 'Password reset successful' })
+  @ApiResponse({ status: 400, description: 'Password reset code not found; Password reset code expired' })
+  @ApiResponse({ status: 401, description: 'User not authorized' })
+  @ApiResponse({ status: 404, description: 'User not found; Company not found' })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
+  @Post('/password/reset')
+  async passwordReset(@Body() dto: PasswordResetDto): Promise<UserCompanyRO> {
+    return await this.userService.passwordReset(dto);
+  }
+
+  @ApiOperation({ summary: 'Password reset request' })
+  @ApiResponse({ status: 200, description: 'Password reset request sent to email' })
+  @ApiResponse({ status: 401, description: 'Password reset request failed' })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
+  @Post('/password/reset/request')
+  async requestPasswordReset(@User('email') email: string): Promise<TEMP_PasswordReset>{
+    return await this.userService.passwordResetRequest(email);
   }
 }
